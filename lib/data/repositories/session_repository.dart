@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/drift.dart';
 
 import '../db/app_database.dart';
@@ -19,21 +21,54 @@ class SessionRepository {
   final AppDatabase _db;
 
   Stream<EmployeeClockState> watchClockState(int employeeId) {
-    final sessionQuery = (_db.select(_db.workSessions)
-          ..where((s) =>
-              s.employeeId.equals(employeeId) & s.endedAt.isNull())
-          ..limit(1))
-        .watchSingleOrNull();
+    final controller = StreamController<EmployeeClockState>();
+    WorkSession? currentSession;
+    List<Break> openBreaks = const [];
+    StreamSubscription<WorkSession?>? sessionSub;
+    StreamSubscription<List<Break>>? breaksSub;
 
-    return sessionQuery.asyncMap((session) async {
-      if (session == null) return EmployeeClockState();
-      final openBreak = await (_db.select(_db.breaks)
-            ..where((b) =>
-                b.sessionId.equals(session.id) & b.endedAt.isNull())
+    void emit() {
+      if (controller.isClosed) return;
+      Break? openBreak;
+      if (currentSession != null) {
+        for (final b in openBreaks) {
+          if (b.sessionId == currentSession!.id) {
+            openBreak = b;
+            break;
+          }
+        }
+      }
+      controller.add(EmployeeClockState(
+        openSession: currentSession,
+        openBreak: openBreak,
+      ));
+    }
+
+    controller.onListen = () {
+      sessionSub = (_db.select(_db.workSessions)
+            ..where((s) =>
+                s.employeeId.equals(employeeId) & s.endedAt.isNull())
             ..limit(1))
-          .getSingleOrNull();
-      return EmployeeClockState(openSession: session, openBreak: openBreak);
-    });
+          .watchSingleOrNull()
+          .listen((s) {
+        currentSession = s;
+        emit();
+      });
+      breaksSub = (_db.select(_db.breaks)
+            ..where((b) => b.endedAt.isNull()))
+          .watch()
+          .listen((list) {
+        openBreaks = list;
+        emit();
+      });
+    };
+
+    controller.onCancel = () async {
+      await sessionSub?.cancel();
+      await breaksSub?.cancel();
+    };
+
+    return controller.stream;
   }
 
   Future<WorkSession> startSession(int employeeId, {DateTime? at}) async {

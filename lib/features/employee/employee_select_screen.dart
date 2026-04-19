@@ -14,14 +14,18 @@ class EmployeeSelectScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('klok — pointage'),
-        actions: [
-          IconButton(
-            tooltip: 'Admin',
-            icon: const Icon(Icons.lock_outline),
-            onPressed: () => context.push('/admin'),
-          ),
-        ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'admin-fab',
+        icon: const Icon(Icons.admin_panel_settings),
+        label: const Text('Administration'),
+        backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+        foregroundColor:
+            Theme.of(context).colorScheme.onSecondaryContainer,
+        onPressed: () => context.push('/admin'),
+      ),
+      floatingActionButtonLocation:
+          FloatingActionButtonLocation.endFloat,
       body: employees.when(
         data: (list) {
           if (list.isEmpty) return const _EmptyState();

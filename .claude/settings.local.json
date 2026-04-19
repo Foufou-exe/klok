@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter --version)",
+      "Bash(where.exe flutter *)",
+      "Bash(cmd.exe //c \"where flutter\")",
+      "Bash(/c/Users/thiba/flutter/bin/flutter --version)",
+      "Bash(/c/Users/thiba/flutter/bin/flutter pub *)",
+      "Bash(/c/Users/thiba/flutter/bin/dart run *)",
+      "Bash(/c/Users/thiba/flutter/bin/flutter analyze *)",
+      "Bash(/c/Users/thiba/flutter/bin/flutter test *)",
+      "Bash(/c/Users/thiba/flutter/bin/flutter build *)",
+      "Bash(/c/Users/thiba/flutter/bin/flutter devices *)",
+      "Bash(/c/Users/thiba/flutter/bin/flutter run *)",
+      "Bash(/c/Users/thiba/flutter/bin/flutter doctor *)",
+      "Bash(/c/Users/thiba/flutter/bin/flutter emulators *)"
+    ]
+  }
+}

@@ -5,6 +5,9 @@ import '../data/repositories/employee_repository.dart';
 import '../data/repositories/session_repository.dart';
 import '../data/repositories/settings_repository.dart';
 
+export '../data/repositories/session_repository.dart'
+    show EmployeeClockState, SessionRepository;
+
 final databaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
   ref.onDispose(db.close);
@@ -42,6 +45,27 @@ final hasAdminPinProvider = FutureProvider<bool>((ref) {
   return ref.watch(settingsRepositoryProvider).hasPin();
 });
 
+/// Nom de l'établissement (ex. "Le Comptoir d'Alphonse") — alimente le header
+/// admin et l'écran d'accueil. Stream (pas Future) car le patron peut le
+/// modifier dans les réglages et on veut que ça se propage tout de suite.
+final barNameProvider = StreamProvider<String?>((ref) {
+  return ref.watch(settingsRepositoryProvider).watch(SettingsKeys.barName);
+});
+
+/// Nom du patron (ex. "Alphonse Martin") — signe les exports PDF.
+final ownerNameProvider = StreamProvider<String?>((ref) {
+  return ref
+      .watch(settingsRepositoryProvider)
+      .watch('owner.name');
+});
+
+/// Date de la dernière sauvegarde (ISO8601), si une a été effectuée.
+final lastBackupAtProvider = StreamProvider<String?>((ref) {
+  return ref
+      .watch(settingsRepositoryProvider)
+      .watch(SettingsKeys.lastBackupAt);
+});
+
 final employeeByIdProvider =
     FutureProvider.family<Employee, int>((ref, id) {
   return ref.watch(employeeRepositoryProvider).getById(id);
@@ -52,4 +76,103 @@ final tickerProvider = StreamProvider<DateTime>((ref) async* {
   await for (final _ in Stream.periodic(const Duration(seconds: 1))) {
     yield DateTime.now();
   }
+});
+
+// ─────────────────────────────────────────────────────────────
+// Agrégats "équipe entière" — utilisés par l'écran d'accueil pour :
+//   • allumer le point vert/ambre sur la pastille de chaque salarié actif,
+//   • afficher le bandeau bas "X en service · Y en pause".
+// On ouvre 2 streams DB (sessions ouvertes, pauses ouvertes) plutôt qu'un
+// clockStateProvider par salarié : 2 souscriptions au lieu de N.
+// ─────────────────────────────────────────────────────────────
+
+final openSessionsProvider = StreamProvider<List<WorkSession>>((ref) {
+  return ref.watch(sessionRepositoryProvider).watchOpenSessions();
+});
+
+final openBreaksProvider = StreamProvider<List<Break>>((ref) {
+  return ref.watch(sessionRepositoryProvider).watchOpenBreaks();
+});
+
+enum EmployeeStatusKind { off, working, onBreak }
+
+class EmployeeStatus {
+  const EmployeeStatus({required this.kind, this.since});
+
+  final EmployeeStatusKind kind;
+  // Instant (UTC) de début du "truc en cours" :
+  //   • working → startedAt de la session ouverte
+  //   • onBreak → startedAt de la pause ouverte
+  //   • off     → null
+  final DateTime? since;
+
+  bool get isActive =>
+      kind == EmployeeStatusKind.working || kind == EmployeeStatusKind.onBreak;
+}
+
+class TeamStatus {
+  const TeamStatus({
+    required this.byEmployee,
+    required this.workingCount,
+    required this.breakCount,
+    required this.workingFirstNames,
+    required this.breakFirstNames,
+  });
+
+  final Map<int, EmployeeStatus> byEmployee;
+  final int workingCount;
+  final int breakCount;
+  // Prénoms pour le bandeau bas ("Thomas en pause").
+  final List<String> workingFirstNames;
+  final List<String> breakFirstNames;
+
+  EmployeeStatus statusOf(int employeeId) =>
+      byEmployee[employeeId] ??
+      const EmployeeStatus(kind: EmployeeStatusKind.off);
+}
+
+final teamStatusProvider = Provider<TeamStatus>((ref) {
+  final sessions = ref.watch(openSessionsProvider).asData?.value ?? const [];
+  final breaks = ref.watch(openBreaksProvider).asData?.value ?? const [];
+  final employees =
+      ref.watch(activeEmployeesProvider).asData?.value ?? const [];
+
+  // sessionId → pause ouverte (s'il y en a une)
+  final breakBySession = <int, Break>{
+    for (final b in breaks) b.sessionId: b,
+  };
+  final firstNameById = <int, String>{
+    for (final e in employees) e.id: e.firstName,
+  };
+
+  final byEmployee = <int, EmployeeStatus>{};
+  final workingNames = <String>[];
+  final breakNames = <String>[];
+
+  for (final s in sessions) {
+    final openBreak = breakBySession[s.id];
+    if (openBreak != null) {
+      byEmployee[s.employeeId] = EmployeeStatus(
+        kind: EmployeeStatusKind.onBreak,
+        since: openBreak.startedAt,
+      );
+      final name = firstNameById[s.employeeId];
+      if (name != null) breakNames.add(name);
+    } else {
+      byEmployee[s.employeeId] = EmployeeStatus(
+        kind: EmployeeStatusKind.working,
+        since: s.startedAt,
+      );
+      final name = firstNameById[s.employeeId];
+      if (name != null) workingNames.add(name);
+    }
+  }
+
+  return TeamStatus(
+    byEmployee: byEmployee,
+    workingCount: workingNames.length,
+    breakCount: breakNames.length,
+    workingFirstNames: workingNames,
+    breakFirstNames: breakNames,
+  );
 });

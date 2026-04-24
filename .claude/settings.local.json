@@ -14,7 +14,15 @@
       "Bash(/c/Users/thiba/flutter/bin/flutter run *)",
       "Bash(/c/Users/thiba/flutter/bin/flutter doctor *)",
       "Bash(/c/Users/thiba/flutter/bin/flutter emulators *)",
-      "Bash(/c/Users/thiba/flutter/bin/flutter clean *)"
+      "Bash(/c/Users/thiba/flutter/bin/flutter clean *)",
+      "Bash(curl -fL --retry 3 -o \"Inter.ttf\" \"https://github.com/google/fonts/raw/main/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf\")",
+      "Bash(curl -fL --retry 3 -o \"InterTight.ttf\" \"https://github.com/google/fonts/raw/main/ofl/intertight/InterTight%5Bwght%5D.ttf\")",
+      "Bash(curl -fL --retry 3 -o \"JetBrainsMono.ttf\" \"https://github.com/google/fonts/raw/main/ofl/jetbrainsmono/JetBrainsMono%5Bwght%5D.ttf\")",
+      "Bash(curl -fLs -o \"OFL-Inter.txt\" \"https://github.com/google/fonts/raw/main/ofl/inter/OFL.txt\")",
+      "Bash(curl -fLs -o \"OFL-InterTight.txt\" \"https://github.com/google/fonts/raw/main/ofl/intertight/OFL.txt\")",
+      "Bash(curl -fLs -o \"OFL-JetBrainsMono.txt\" \"https://github.com/google/fonts/raw/main/ofl/jetbrainsmono/OFL.txt\")",
+      "Bash(flutter pub *)",
+      "Bash(flutter analyze *)"
     ]
   }
 }

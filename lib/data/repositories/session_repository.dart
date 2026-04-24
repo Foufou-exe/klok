@@ -129,6 +129,20 @@ class SessionRepository {
         .write(BreaksCompanion(endedAt: Value(now)));
   }
 
+  /// Stream de toutes les sessions encore ouvertes (tout salarié confondu).
+  /// Utilisé par les vues d'accueil / dashboard patron pour afficher en direct
+  /// qui est en poste sans multiplier les souscriptions DB.
+  Stream<List<WorkSession>> watchOpenSessions() {
+    return (_db.select(_db.workSessions)..where((s) => s.endedAt.isNull()))
+        .watch();
+  }
+
+  /// Stream de toutes les pauses encore ouvertes (toutes sessions confondues).
+  /// Croisé avec `watchOpenSessions` pour distinguer "en service" vs "en pause".
+  Stream<List<Break>> watchOpenBreaks() {
+    return (_db.select(_db.breaks)..where((b) => b.endedAt.isNull())).watch();
+  }
+
   Future<List<WorkSession>> sessionsInRange(
     int employeeId,
     DateTime from,

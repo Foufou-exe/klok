@@ -4,6 +4,8 @@ import '../data/db/app_database.dart';
 import '../data/repositories/employee_repository.dart';
 import '../data/repositories/session_repository.dart';
 import '../data/repositories/settings_repository.dart';
+import '../services/backup_service.dart';
+import '../services/payroll_pdf_service.dart';
 
 export '../data/repositories/session_repository.dart'
     show EmployeeClockState, SessionRepository;
@@ -53,10 +55,35 @@ final barNameProvider = StreamProvider<String?>((ref) {
 });
 
 /// Nom du patron (ex. "Alphonse Martin") — signe les exports PDF.
+///
+/// Lit en priorité les nouveaux champs séparés `ownerFirstName` /
+/// `ownerLastName` (introduits avec l'onboarding étendu). Retombe sur la clé
+/// legacy `owner.name` si une installation antérieure n'a pas encore les
+/// champs séparés (un patron qui upgrade depuis la v1 ne perd pas son nom).
 final ownerNameProvider = StreamProvider<String?>((ref) {
-  return ref
-      .watch(settingsRepositoryProvider)
-      .watch('owner.name');
+  final repo = ref.watch(settingsRepositoryProvider);
+  return repo.watch(SettingsKeys.ownerFirstName).asyncMap((first) async {
+    final last = await repo.get(SettingsKeys.ownerLastName);
+    final fullName = [first ?? '', last ?? '']
+        .where((s) => s.isNotEmpty)
+        .join(' ')
+        .trim();
+    if (fullName.isNotEmpty) return fullName;
+    // Fallback legacy.
+    return repo.get(SettingsKeys.ownerLegacyName);
+  });
+});
+
+/// Service de sauvegarde — partage la même instance de DB que le reste de
+/// l'app, c'est important : sinon un restore via une 2e DB n'aurait aucun
+/// effet visible.
+final backupServiceProvider = Provider<BackupService>((ref) {
+  return BackupService(ref.watch(databaseProvider));
+});
+
+/// Service de génération PDF paie — un PDF par salarié sur une période.
+final payrollPdfServiceProvider = Provider<PayrollPdfService>((ref) {
+  return PayrollPdfService(ref.watch(sessionRepositoryProvider));
 });
 
 /// Date de la dernière sauvegarde (ISO8601), si une a été effectuée.

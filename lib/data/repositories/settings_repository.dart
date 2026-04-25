@@ -8,6 +8,12 @@ class SettingsKeys {
   static const pinHash = 'admin.pin_hash';
   static const pinSalt = 'admin.pin_salt';
   static const barName = 'bar.name';
+  static const barLocation = 'bar.location';
+  static const ownerFirstName = 'owner.first_name';
+  static const ownerLastName = 'owner.last_name';
+  // Conservé pour compat avec les installations antérieures qui stockaient
+  // un seul champ "owner.name". On le lit en lecture si first/last sont vides.
+  static const ownerLegacyName = 'owner.name';
   static const lastBackupAt = 'backup.last_at';
 }
 

@@ -22,7 +22,15 @@
       "Bash(curl -fLs -o \"OFL-InterTight.txt\" \"https://github.com/google/fonts/raw/main/ofl/intertight/OFL.txt\")",
       "Bash(curl -fLs -o \"OFL-JetBrainsMono.txt\" \"https://github.com/google/fonts/raw/main/ofl/jetbrainsmono/OFL.txt\")",
       "Bash(flutter pub *)",
-      "Bash(flutter analyze *)"
+      "Bash(flutter analyze *)",
+      "Bash([ -s \"C:\\\\\\\\Users\\\\\\\\thiba\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\claude\\\\\\\\C--Users-thiba-Documents-Environnement-dev-klok\\\\\\\\406e4ee5-fd5e-4f97-97bd-863782d000ed\\\\\\\\tasks\\\\\\\\b6o9w8vne.output\" ])",
+      "Bash(grep -qE \"issues found|No issues found|error\" \"C:\\\\\\\\Users\\\\\\\\thiba\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\claude\\\\\\\\C--Users-thiba-Documents-Environnement-dev-klok\\\\\\\\406e4ee5-fd5e-4f97-97bd-863782d000ed\\\\\\\\tasks\\\\\\\\b6o9w8vne.output\")",
+      "Bash(grep -qE \"issues found|No issues|error \" \"C:\\\\\\\\Users\\\\\\\\thiba\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\claude\\\\\\\\C--Users-thiba-Documents-Environnement-dev-klok\\\\\\\\406e4ee5-fd5e-4f97-97bd-863782d000ed\\\\\\\\tasks\\\\\\\\b6o9w8vne.output\")",
+      "Bash(wc -l \"C:\\\\\\\\Users\\\\\\\\thiba\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\claude\\\\\\\\C--Users-thiba-Documents-Environnement-dev-klok\\\\\\\\406e4ee5-fd5e-4f97-97bd-863782d000ed\\\\\\\\tasks\\\\\\\\b6o9w8vne.output\")",
+      "Bash(tail -80 \"C:\\\\\\\\Users\\\\\\\\thiba\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\claude\\\\\\\\C--Users-thiba-Documents-Environnement-dev-klok\\\\\\\\406e4ee5-fd5e-4f97-97bd-863782d000ed\\\\\\\\tasks\\\\\\\\b6o9w8vne.output\")",
+      "Bash(tasklist)",
+      "Bash(cat \"C:\\\\\\\\Users\\\\\\\\thiba\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\claude\\\\\\\\C--Users-thiba-Documents-Environnement-dev-klok\\\\\\\\406e4ee5-fd5e-4f97-97bd-863782d000ed\\\\\\\\tasks\\\\\\\\b6pwufegm.output\")",
+      "Bash(grep -qE \"issues found|No issues found|^error\" \"C:\\\\\\\\Users\\\\\\\\thiba\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\claude\\\\\\\\C--Users-thiba-Documents-Environnement-dev-klok\\\\\\\\406e4ee5-fd5e-4f97-97bd-863782d000ed\\\\\\\\tasks\\\\\\\\b6o9w8vne.output\")"
     ]
   }
 }

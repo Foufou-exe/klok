@@ -2,13 +2,14 @@
 //
 // Deux modes :
 //   • Pas de PIN en DB → création : 2 saisies concordantes sur le pavé.
-//   • PIN existant → vérification : 4 chiffres, animation shake à l'erreur.
+//     (En pratique l'onboarding crée déjà le PIN, mais on conserve ce
+//     fallback si on entre en mode "réinitialisation" depuis Réglages.)
+//   • PIN existant → vérification : `kAdminPinLength` chiffres,
+//     animation shake à l'erreur.
 //
-// On gère le PIN en state local (chaîne "1234" max). Chaque pression ajoute
-// un chiffre, la croix efface le dernier. Quand on atteint 4 chiffres, on
-// déclenche la vérification (ou la validation en mode création) après un
-// petit délai visuel de 200 ms — l'utilisateur voit le 4e point s'allumer
-// avant de recevoir le verdict.
+// Les chiffres du pavé sont mélangés aléatoirement à chaque ouverture de la
+// gate (anti shoulder-surfing). Le shuffle est fait une fois en `initState`
+// — remélanger à chaque touche serait insupportable côté UX.
 //
 // Ref design : shared/app.jsx (fonction PinGate).
 
@@ -19,6 +20,8 @@ import 'package:go_router/go_router.dart';
 import '../../design/tokens.dart';
 import '../../state/admin_session.dart';
 import '../../state/providers.dart';
+import '../onboarding/klok_onboarding.dart' show kAdminPinLength;
+import 'widgets/pin_keypad.dart';
 
 class AdminGateScreen extends ConsumerWidget {
   const AdminGateScreen({super.key});
@@ -104,6 +107,9 @@ class _PinEntryState extends ConsumerState<_PinEntry>
   bool _error = false;
   bool _busy = false;
   late final AnimationController _shake;
+  // Shuffle figé pour la durée de la session de saisie. Si la gate se
+  // referme et se ré-ouvre, on aura un nouvel ordre.
+  late final List<String> _digits = randomKeypadDigits();
 
   @override
   void initState() {
@@ -121,11 +127,11 @@ class _PinEntryState extends ConsumerState<_PinEntry>
   }
 
   Future<void> _onDigit(String d) async {
-    if (_busy || _pin.length >= 4) return;
+    if (_busy || _pin.length >= kAdminPinLength) return;
     setState(() => _pin = _pin + d);
-    if (_pin.length == 4) {
+    if (_pin.length == kAdminPinLength) {
       setState(() => _busy = true);
-      // Petit délai : laisser le 4e point s'allumer visuellement.
+      // Petit délai : laisser le dernier point s'allumer visuellement.
       await Future<void>.delayed(const Duration(milliseconds: 180));
       final ok = await ref
           .read(adminUnlockedProvider.notifier)
@@ -172,16 +178,22 @@ class _PinEntryState extends ConsumerState<_PinEntry>
         ),
         const SizedBox(height: 4),
         Text(
-          'Saisis ton PIN à 4 chiffres',
+          'Saisis ton PIN à $kAdminPinLength chiffres',
           style: TextStyle(
             fontSize: 13,
             color: KlokTokens.inkSoft,
           ),
         ),
         const SizedBox(height: 28),
-        _PinDots(length: 4, filled: _pin.length, error: _error, shake: _shake),
+        PinDots(
+          length: kAdminPinLength,
+          filled: _pin.length,
+          error: _error,
+          shake: _shake,
+        ),
         const SizedBox(height: 28),
-        _Keypad(
+        PinKeypad(
+          digits: _digits,
           onDigit: _onDigit,
           onBackspace: _onBackspace,
         ),
@@ -191,7 +203,7 @@ class _PinEntryState extends ConsumerState<_PinEntry>
 }
 
 // ─────────────────────────────────────────────────────────────
-// Create : deux saisies concordantes
+// Create : deux saisies concordantes (fallback sans onboarding)
 // ─────────────────────────────────────────────────────────────
 class _PinCreate extends ConsumerStatefulWidget {
   const _PinCreate();
@@ -209,6 +221,9 @@ class _PinCreateState extends ConsumerState<_PinCreate>
   bool _error = false;
   bool _busy = false;
   late final AnimationController _shake;
+  // Pour la création on garde l'ordre standard (plus simple à mémoriser
+  // pour l'utilisateur qui saisit DEUX fois le même code).
+  static const _digits = kStandardKeypadDigits;
 
   @override
   void initState() {
@@ -229,7 +244,7 @@ class _PinCreateState extends ConsumerState<_PinCreate>
 
   Future<void> _onDigit(String d) async {
     if (_busy) return;
-    if (_active.length >= 4) return;
+    if (_active.length >= kAdminPinLength) return;
     setState(() {
       if (_step == 0) {
         _firstPin = _firstPin + d;
@@ -237,11 +252,11 @@ class _PinCreateState extends ConsumerState<_PinCreate>
         _secondPin = _secondPin + d;
       }
     });
-    if (_step == 0 && _firstPin.length == 4) {
+    if (_step == 0 && _firstPin.length == kAdminPinLength) {
       await Future<void>.delayed(const Duration(milliseconds: 200));
       if (!mounted) return;
       setState(() => _step = 1);
-    } else if (_step == 1 && _secondPin.length == 4) {
+    } else if (_step == 1 && _secondPin.length == kAdminPinLength) {
       setState(() => _busy = true);
       await Future<void>.delayed(const Duration(milliseconds: 180));
       if (_firstPin == _secondPin) {
@@ -302,22 +317,23 @@ class _PinCreateState extends ConsumerState<_PinCreate>
         const SizedBox(height: 4),
         Text(
           _step == 0
-              ? '4 chiffres. Tu les utiliseras pour ouvrir l\'admin.'
-              : 'Retape les 4 mêmes chiffres.',
+              ? "$kAdminPinLength chiffres. Tu les utiliseras pour ouvrir l'admin."
+              : 'Retape les $kAdminPinLength mêmes chiffres.',
           style: TextStyle(
             fontSize: 13,
             color: KlokTokens.inkSoft,
           ),
         ),
         const SizedBox(height: 28),
-        _PinDots(
-          length: 4,
+        PinDots(
+          length: kAdminPinLength,
           filled: _active.length,
           error: _error,
           shake: _shake,
         ),
         const SizedBox(height: 28),
-        _Keypad(
+        PinKeypad(
+          digits: _digits,
           onDigit: _onDigit,
           onBackspace: _onBackspace,
         ),
@@ -344,174 +360,6 @@ class _HeaderIcon extends StatelessWidget {
         Icons.lock_outline,
         size: 24,
         color: KlokTokens.bordeaux,
-      ),
-    );
-  }
-}
-
-class _PinDots extends StatelessWidget {
-  const _PinDots({
-    required this.length,
-    required this.filled,
-    required this.error,
-    required this.shake,
-  });
-
-  final int length;
-  final int filled;
-  final bool error;
-  final Animation<double> shake;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: shake,
-      builder: (ctx, child) {
-        // Courbe sinusoïdale amortie → oscillation "no/non" de 8 px.
-        final t = shake.value;
-        final dx = t == 0 ? 0.0 : 8 * (1 - t) * (t * 20).remainder(2) - 8 * (1 - t);
-        return Transform.translate(
-          offset: Offset(dx, 0),
-          child: child,
-        );
-      },
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(length, (i) {
-          final isFilled = i < filled;
-          final color = error
-              ? KlokTokens.danger
-              : KlokTokens.bordeaux;
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 120),
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isFilled ? color : Colors.transparent,
-                border: Border.all(
-                  color: isFilled ? color : KlokTokens.border,
-                  width: 1.5,
-                ),
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-}
-
-class _Keypad extends StatelessWidget {
-  const _Keypad({required this.onDigit, required this.onBackspace});
-
-  final ValueChanged<String> onDigit;
-  final VoidCallback onBackspace;
-
-  @override
-  Widget build(BuildContext context) {
-    // 4 lignes × 3 colonnes, dernière ligne : [vide, 0, backspace].
-    return SizedBox(
-      width: 72 * 3 + 10 * 2,
-      child: Column(
-        children: [
-          _row(['1', '2', '3']),
-          const SizedBox(height: 10),
-          _row(['4', '5', '6']),
-          const SizedBox(height: 10),
-          _row(['7', '8', '9']),
-          const SizedBox(height: 10),
-          _row(['', '0', 'back']),
-        ],
-      ),
-    );
-  }
-
-  Widget _row(List<String> items) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        for (var i = 0; i < items.length; i++) ...[
-          if (items[i] == '')
-            const SizedBox(width: 72, height: 72)
-          else if (items[i] == 'back')
-            _KeyBackspace(onTap: onBackspace)
-          else
-            _KeyDigit(value: items[i], onTap: () => onDigit(items[i])),
-          if (i < items.length - 1) const SizedBox(width: 10),
-        ],
-      ],
-    );
-  }
-}
-
-class _KeyDigit extends StatelessWidget {
-  const _KeyDigit({required this.value, required this.onTap});
-
-  final String value;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: KlokTokens.card,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Ink(
-          decoration: BoxDecoration(
-            color: KlokTokens.card,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: KlokTokens.border),
-          ),
-          width: 72,
-          height: 72,
-          child: Center(
-            child: Text(
-              value,
-              style: TextStyle(
-                fontFamily: KlokTokens.fontDisplay,
-                fontSize: 26,
-                fontWeight: FontWeight.w400,
-                color: KlokTokens.ink,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _KeyBackspace extends StatelessWidget {
-  const _KeyBackspace({required this.onTap});
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Ink(
-          decoration: BoxDecoration(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: KlokTokens.border),
-          ),
-          width: 72,
-          height: 72,
-          child: Icon(
-            Icons.backspace_outlined,
-            size: 20,
-            color: KlokTokens.inkSoft,
-          ),
-        ),
       ),
     );
   }

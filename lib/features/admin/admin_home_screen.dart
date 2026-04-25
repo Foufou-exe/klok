@@ -17,6 +17,7 @@ import 'package:go_router/go_router.dart';
 import '../../data/db/app_database.dart';
 import '../../design/tokens.dart';
 import '../../state/admin_session.dart';
+import '../../state/providers.dart';
 import 'tabs/dashboard_tab.dart';
 import 'tabs/backup_tab.dart';
 import 'tabs/export_tab.dart';
@@ -59,6 +60,12 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Padding horizontal via MediaQuery — on évite tout LayoutBuilder ici :
+    // les ConsumerWidgets enfants (qui watchent des StreamProviders) peuvent
+    // émettre une valeur cachée synchroniquement pendant la pose et déclencher
+    // un `!_debugDoingThisLayout` en re-entrance.
+    final horiz =
+        MediaQuery.sizeOf(context).width >= 900 ? 28.0 : 20.0;
     return Scaffold(
       backgroundColor: KlokTokens.bg,
       body: SafeArea(
@@ -70,14 +77,9 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
               onExit: _exitAdmin,
             ),
             Expanded(
-              child: LayoutBuilder(
-                builder: (ctx, bc) {
-                  final horiz = bc.maxWidth >= 900 ? 28.0 : 20.0;
-                  return Padding(
-                    padding: EdgeInsets.fromLTRB(horiz, 28, horiz, 28),
-                    child: _body(),
-                  );
-                },
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(horiz, 28, horiz, 28),
+                child: _body(),
               ),
             ),
           ],
@@ -122,7 +124,11 @@ class _AdminHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final narrow = MediaQuery.sizeOf(context).width < 1000;
+    // En dessous de 1100 (typiquement tablette portrait) on bascule sur deux
+    // lignes : ligne 1 = logo + nom établissement + bouton Quitter, ligne 2 =
+    // la rangée d'onglets en pleine largeur. Comme ça les 5 pills sont
+    // toujours visibles, plus de scroll horizontal caché à l'utilisateur.
+    final narrow = MediaQuery.sizeOf(context).width < 1100;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -132,24 +138,45 @@ class _AdminHeader extends ConsumerWidget {
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: narrow ? 20 : 36, vertical: 20),
-        child: Row(
-          children: [
-            _Logo(),
-            const SizedBox(width: 14),
-            if (!narrow) const Flexible(child: _EstablishmentLabel()),
-            if (!narrow) const Spacer(),
-            // Onglets pill
-            Flexible(
-              child: _TabPillGroup(
-                active: activeTab,
-                onSelect: onSelect,
+        padding: EdgeInsets.symmetric(
+            horizontal: narrow ? 20 : 36, vertical: narrow ? 14 : 20),
+        child: narrow
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      _Logo(),
+                      const SizedBox(width: 12),
+                      const Expanded(child: _EstablishmentLabel()),
+                      const SizedBox(width: 12),
+                      _ExitButton(onTap: onExit),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  // Pills sur leur propre ligne, scroll horizontal seulement
+                  // si vraiment trop étroit (cas portrait phone).
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: _TabPillGroup(
+                      active: activeTab,
+                      onSelect: onSelect,
+                    ),
+                  ),
+                ],
+              )
+            : Row(
+                children: [
+                  _Logo(),
+                  const SizedBox(width: 14),
+                  const Expanded(child: _EstablishmentLabel()),
+                  const SizedBox(width: 12),
+                  _TabPillGroup(active: activeTab, onSelect: onSelect),
+                  const SizedBox(width: 12),
+                  _ExitButton(onTap: onExit),
+                ],
               ),
-            ),
-            const SizedBox(width: 12),
-            _ExitButton(onTap: onExit),
-          ],
-        ),
       ),
     );
   }

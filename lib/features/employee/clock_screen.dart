@@ -23,7 +23,6 @@ import 'package:go_router/go_router.dart';
 import '../../core/format.dart';
 import '../../core/time_math.dart';
 import '../../data/db/app_database.dart';
-import '../../data/repositories/session_repository.dart';
 import '../../design/tokens.dart';
 import '../../state/providers.dart';
 

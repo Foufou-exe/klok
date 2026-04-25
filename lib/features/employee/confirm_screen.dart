@@ -117,28 +117,32 @@ class _ConfirmBody extends StatelessWidget {
     final color = msg.color;
     final initials = _initialsOf(employee);
 
+    // StackFit.expand : on force le Stack à prendre toute la place disponible
+    // dans le Scaffold, sinon il se cale sur la taille intrinsèque de la
+    // colonne et le contenu se retrouve aligné à gauche au lieu d'être
+    // centré sur l'écran.
     return Stack(
       alignment: Alignment.center,
+      fit: StackFit.expand,
       children: [
         // Dégradé radial autour de la pastille — teinte la couleur de l'action
         // (vert/bordeaux/ambre) vers transparent.
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment.center,
-                radius: 0.7,
-                colors: [
-                  color.withValues(alpha: 0.13),
-                  color.withValues(alpha: 0.0),
-                ],
-                stops: const [0.0, 1.0],
-              ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: Alignment.center,
+              radius: 0.7,
+              colors: [
+                color.withValues(alpha: 0.13),
+                color.withValues(alpha: 0.0),
+              ],
+              stops: const [0.0, 1.0],
             ),
           ),
         ),
         Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Grosse pastille
             Container(

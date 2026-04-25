@@ -31,47 +31,53 @@ class DashboardTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final now = ref.watch(tickerProvider).asData?.value ?? DateTime.now();
+    // On évite LayoutBuilder ici : un ref.watch sur un StreamProvider à valeur
+    // déjà en cache peut émettre synchroniquement pendant la phase de layout
+    // et déclencher un !_debugDoingThisLayout. MediaQuery se résout au build
+    // (avant layout), donc safe.
+    final wide = MediaQuery.sizeOf(context).width >= 900;
 
-    return LayoutBuilder(
-      builder: (ctx, bc) {
-        final wide = bc.maxWidth >= 900;
-        return SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _Header(now: now),
-              const SizedBox(height: 20),
-              // Row 1 : En poste + Cette semaine
-              wide
-                  ? Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(
-                          flex: 7,
-                          child: _ActiveNowCard(onOpen: onOpenEmployee),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          flex: 5,
-                          child: const _WeekCard(),
-                        ),
-                      ],
-                    )
-                  : Column(
-                      children: [
-                        _ActiveNowCard(onOpen: onOpenEmployee),
-                        const SizedBox(height: 16),
-                        const _WeekCard(),
-                      ],
-                    ),
-              const SizedBox(height: 16),
-              // Row 2 : 3 stat cards
-              _StatRow(wide: wide),
-            ],
-          ),
-        );
-      },
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _Header(now: now),
+          const SizedBox(height: 20),
+          // Row 1 : En poste + Cette semaine
+          // IntrinsicHeight nécessaire car on est dans un SingleChildScrollView
+          // (hauteur non bornée) et on veut que les deux cards prennent la même
+          // hauteur. Sans ça, le `crossAxisAlignment: stretch` du Row tente de
+          // s'étirer à l'infini → "BoxConstraints forces an infinite height".
+          wide
+              ? IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        flex: 7,
+                        child: _ActiveNowCard(onOpen: onOpenEmployee),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        flex: 5,
+                        child: const _WeekCard(),
+                      ),
+                    ],
+                  ),
+                )
+              : Column(
+                  children: [
+                    _ActiveNowCard(onOpen: onOpenEmployee),
+                    const SizedBox(height: 16),
+                    const _WeekCard(),
+                  ],
+                ),
+          const SizedBox(height: 16),
+          // Row 2 : 3 stat cards
+          _StatRow(wide: wide),
+        ],
+      ),
     );
   }
 }
@@ -475,7 +481,11 @@ class _StatRow extends ConsumerWidget {
         ],
       );
     }
+    // Mode étroit : empilées, mais on force le stretch horizontal pour que
+    // chaque card prenne toute la largeur disponible (sans ce stretch, la
+    // Column se cale sur la largeur intrinsèque de la card, qui est faible).
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (int i = 0; i < stats.length; i++) ...[
           _StatCard(stat: stats[i]),

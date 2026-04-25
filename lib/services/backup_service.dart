@@ -79,10 +79,12 @@ class BackupService {
   }
 
   Future<void> share(BackupResult r) async {
-    await Share.shareXFiles(
-      [XFile(r.filePath, mimeType: 'application/json')],
+    // share_plus 12.x : `Share.shareXFiles` est deprecated au profit de
+    // `SharePlus.instance.share(ShareParams(...))`.
+    await SharePlus.instance.share(ShareParams(
+      files: [XFile(r.filePath, mimeType: 'application/json')],
       subject: 'Sauvegarde klok',
-    );
+    ));
   }
 
   RestorePreview inspect(Uint8List bytes) {

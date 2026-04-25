@@ -9,6 +9,8 @@
 //
 // Ref design : variants/v2-pastille.jsx (fonction V2PickEmployee).
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -27,10 +29,12 @@ class EmployeeSelectScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: KlokTokens.bg,
       body: SafeArea(
+        // On rend TOUJOURS la structure complète (header + corps + footer),
+        // même en empty state : c'est important pour que le cadenas du
+        // bandeau bas reste accessible quand le patron vient de finir
+        // l'onboarding et n'a pas encore de salarié.
         child: employees.when(
-          data: (list) => list.isEmpty
-              ? const _EmptyState()
-              : _PickContent(employees: list),
+          data: (list) => _PickContent(employees: list),
           error: (e, st) => Center(
             child: Text(
               'Erreur : $e',
@@ -91,33 +95,41 @@ class _PickContent extends ConsumerWidget {
         // le header — sinon, avec une petite équipe, la grille était centrée
         // verticalement et il y avait un grand vide entre les pastilles et le
         // bandeau du bas. Padding bottom réduit aussi pour serrer.
+        //
+        // Si l'équipe est vide (post-onboarding, premier lancement), on
+        // affiche l'empty state à la place de la grille — header et footer
+        // restent visibles, donc le cadenas reste accessible.
         Expanded(
           child: Padding(
             padding: EdgeInsets.fromLTRB(horiz, 4, horiz, 12),
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: GridView.builder(
-                shrinkWrap: true,
-                physics: const BouncingScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: cols,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  // Pastille (pastilleSize) + gap 12 + nom (~40) + padding
-                  childAspectRatio: pastilleSize / (pastilleSize + 72),
-                ),
-                itemCount: employees.length,
-                itemBuilder: (ctx, i) {
-                  final e = employees[i];
-                  return _EmployeeTile(
-                    employee: e,
-                    status: team.statusOf(e.id),
-                    pastilleSize: pastilleSize,
-                    onTap: () => context.push('/clock/${e.id}'),
-                  );
-                },
-              ),
-            ),
+            child: employees.isEmpty
+                ? const _EmptyState()
+                : Align(
+                    alignment: Alignment.topCenter,
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      physics: const BouncingScrollPhysics(),
+                      gridDelegate:
+                          SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: cols,
+                        mainAxisSpacing: 16,
+                        crossAxisSpacing: 16,
+                        // Pastille (pastilleSize) + gap 12 + nom (~40) + padding
+                        childAspectRatio:
+                            pastilleSize / (pastilleSize + 72),
+                      ),
+                      itemCount: employees.length,
+                      itemBuilder: (ctx, i) {
+                        final e = employees[i];
+                        return _EmployeeTile(
+                          employee: e,
+                          status: team.statusOf(e.id),
+                          pastilleSize: pastilleSize,
+                          onTap: () => context.push('/clock/${e.id}'),
+                        );
+                      },
+                    ),
+                  ),
           ),
         ),
         _BottomBand(team: team, horiz: horiz),
@@ -178,11 +190,36 @@ class _Header extends StatelessWidget {
   }
 }
 
-/// Petite pastille bordeaux avec un "k" — placeholder visuel tant qu'aucun
-/// logo n'est importé par le patron. Quand le pipeline d'import sera câblé,
-/// on remplacera par l'image stockée localement.
-class _BrandLogo extends StatelessWidget {
+/// Logo de l'établissement, à utiliser dans le bandeau bas. Si le patron a
+/// importé un fichier image (cf. Réglages → Logo), on l'affiche redimensionné
+/// dans un carré arrondi. Sinon on retombe sur la pastille bordeaux "k".
+class _BrandLogo extends ConsumerWidget {
   const _BrandLogo();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final logoPath = ref.watch(logoPathProvider).asData?.value;
+    if (logoPath != null && logoPath.isNotEmpty && File(logoPath).existsSync()) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.file(
+          File(logoPath),
+          width: 28,
+          height: 28,
+          fit: BoxFit.cover,
+          // Si l'image a été supprimée entre-temps (ex. clean app data partial),
+          // on retombe gracieusement sur la pastille générique au lieu de
+          // crasher.
+          errorBuilder: (_, _, _) => const _BrandPastille(),
+        ),
+      );
+    }
+    return const _BrandPastille();
+  }
+}
+
+class _BrandPastille extends StatelessWidget {
+  const _BrandPastille();
 
   @override
   Widget build(BuildContext context) {
@@ -558,6 +595,8 @@ class _TeamSummary extends StatelessWidget {
   }
 }
 
+/// Bouton "Mode patron" en bas à droite du bandeau salarié — l'unique porte
+/// d'entrée vers l'admin depuis l'écran public sur l'appareil.
 class _AdminLockButton extends StatelessWidget {
   const _AdminLockButton();
 
@@ -569,13 +608,27 @@ class _AdminLockButton extends StatelessWidget {
       child: InkWell(
         onTap: () => context.push('/admin'),
         borderRadius: BorderRadius.circular(12),
-        child: SizedBox(
-          width: 44,
-          height: 44,
-          child: Icon(
-            Icons.lock_outline,
-            size: 18,
-            color: KlokTokens.muted,
+        child: Padding(
+          padding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.lock_outline,
+                size: 16,
+                color: KlokTokens.inkSoft,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Mode patron',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: KlokTokens.inkSoft,
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -626,8 +679,8 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              "Tape sur le cadenas en bas à droite pour ouvrir l'admin "
-              "et ajouter ton équipe.",
+              "Tape sur « Mode patron » en bas à droite pour ouvrir "
+              "l'admin et ajouter ton équipe.",
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,

@@ -93,6 +93,27 @@ final lastBackupAtProvider = StreamProvider<String?>((ref) {
       .watch(SettingsKeys.lastBackupAt);
 });
 
+/// Chemin absolu du logo importé par le patron — null si non défini.
+final logoPathProvider = StreamProvider<String?>((ref) {
+  return ref.watch(settingsRepositoryProvider).watch(SettingsKeys.logoPath);
+});
+
+/// Fréquence du rappel de sauvegarde : 'none' / 'weekly' / 'monthly'.
+/// On garde la valeur brute (String) ; les widgets l'interprètent via
+/// `BackupReminderFreq.parse`.
+final backupReminderFreqProvider = StreamProvider<String?>((ref) {
+  return ref
+      .watch(settingsRepositoryProvider)
+      .watch(SettingsKeys.backupReminderFreq);
+});
+
+/// Date du dernier "check" de mise à jour manuel par le patron (ISO8601).
+final lastUpdateCheckAtProvider = StreamProvider<String?>((ref) {
+  return ref
+      .watch(settingsRepositoryProvider)
+      .watch(SettingsKeys.lastUpdateCheckAt);
+});
+
 final employeeByIdProvider =
     FutureProvider.family<Employee, int>((ref, id) {
   return ref.watch(employeeRepositoryProvider).getById(id);

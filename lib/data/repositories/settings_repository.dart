@@ -15,6 +15,17 @@ class SettingsKeys {
   // un seul champ "owner.name". On le lit en lecture si first/last sont vides.
   static const ownerLegacyName = 'owner.name';
   static const lastBackupAt = 'backup.last_at';
+  // Logo importé : on stocke le chemin absolu dans le dossier app docs (le
+  // fichier est copié là pour survivre aux nettoyages du temp).
+  static const logoPath = 'bar.logo_path';
+  // Fréquence du rappel de sauvegarde — valeurs : 'none', 'weekly', 'monthly'.
+  // Default 'weekly' à l'initialisation. Sert à afficher un bandeau quand la
+  // dernière sauvegarde dépasse l'intervalle.
+  static const backupReminderFreq = 'backup.reminder_freq';
+  // Date du dernier check de mises à jour (ISO8601). Côté offline, on n'a pas
+  // de serveur à interroger : "Vérifier" ne fait que stamper cette date pour
+  // que le patron sache quand il a vérifié manuellement.
+  static const lastUpdateCheckAt = 'updates.last_check_at';
 }
 
 class SettingsRepository {

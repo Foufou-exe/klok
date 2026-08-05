@@ -102,7 +102,9 @@ App privée, jamais sur store public. APK signé avec une keystore stable (à sa
 3. Taguer `vX.Y.Z` → le workflow `.github/workflows/release.yml` compile un APK signé (keystore dans les secrets GitHub) et publie une release. Le workflow refuse de tourner si le tag ne correspond pas au pubspec, ou si la keystore manque.
 4. Le patron voit la MAJ via Réglages → Vérifier, et installe l'APK par-dessus (les données sont conservées).
 
-**Secrets GitHub requis** : `KEYSTORE_BASE64` et `KEYSTORE_PASSWORD`, c'est tout. L'alias est figé dans `release.yml` (`DEFAULT_KEY_ALIAS: klok`) — ce n'est pas un secret, juste une étiquette interne au fichier. `KEY_ALIAS` et `KEY_PASSWORD` restent acceptés en option si un jour l'alias change ou si la clé reçoit un mot de passe distinct du magasin (PKCS12 ne s'y prête pas en pratique).
+**Secrets GitHub requis** : `KEYSTORE_BASE64` et `KEYSTORE_PASSWORD`, c'est tout. L'alias n'est écrit nulle part : le workflow le lit dans la keystore avec `keytool`, donc regénérer une keystore avec un autre alias ne casse rien. `KEY_ALIAS` et `KEY_PASSWORD` restent acceptés en option (alias forcé, ou clé au mot de passe distinct du magasin — PKCS12 ne s'y prête pas en pratique).
+
+**En local** : `./tool/setup_signing.sh <keystore.p12>` génère `android/key.properties` avec la même détection d'alias, pour que build local et CI ne divergent pas.
 
 **Une seule chose est irremplaçable : la keystore.** Android refuse toute mise à jour signée par une autre clé. La perdre obligerait le patron à désinstaller — donc à perdre ses données. Elle doit exister en au moins deux endroits durables, hors de la machine de dev.
 

@@ -29,10 +29,6 @@ permissions:
 
 env:
   FLUTTER_VERSION: '3.41.7'
-  # L'alias n'est pas un secret : c'est une étiquette interne au fichier, pas
-  # un élément d'authentification. Le figer ici évite un secret de plus à
-  # configurer et à ne pas perdre.
-  DEFAULT_KEY_ALIAS: klok
 
 jobs:
   release:
@@ -114,19 +110,48 @@ jobs:
           KEY_PASSWORD_OPT: ${{ secrets.KEY_PASSWORD }}
           KEY_ALIAS_OPT: ${{ secrets.KEY_ALIAS }}
         run: |
+          set -euo pipefail
           if [ -z "$STORE_PASSWORD" ]; then
             echo "::error::Secret KEYSTORE_PASSWORD absent — impossible de signer."
             exit 1
           fi
-          # Repli sur le mot de passe du magasin et sur l'alias par défaut :
-          # deux secrets suffisent dans le cas courant.
+
+          KEYSTORE="$RUNNER_TEMP/klok-release.p12"
+
+          # L'alias est lu dans la keystore plutôt que codé en dur : c'est le
+          # fichier qui fait autorité, pas une constante du dépôt. Le workflow
+          # reste juste si la keystore est regénérée avec un autre alias.
+          # Le mot de passe passe par stdin, jamais en argument : la ligne de
+          # commande d'un processus est lisible par les autres processus.
+          # -J-Duser.language=en fige la locale, sinon « PrivateKeyEntry »
+          # pourrait être traduit selon l'environnement du runner.
+          if [ -n "$KEY_ALIAS_OPT" ]; then
+            KEY_ALIAS="$KEY_ALIAS_OPT"
+            echo "Alias fourni par le secret KEY_ALIAS."
+          else
+            KEY_ALIAS=$(printf '%s\n' "$STORE_PASSWORD" \
+              | keytool -list -keystore "$KEYSTORE" -storetype PKCS12 \
+                  -J-Duser.language=en 2>/dev/null \
+              | grep -m1 'PrivateKeyEntry' \
+              | cut -d',' -f1 \
+              | tr -d '[:space:]')
+            echo "Alias lu dans la keystore."
+          fi
+
+          if [ -z "$KEY_ALIAS" ]; then
+            echo "::error::Aucune clé privée trouvée dans la keystore. Mot de passe erroné, ou fichier ne contenant qu'un certificat."
+            exit 1
+          fi
+
+          # En PKCS12, keytool impose en pratique le même mot de passe pour la
+          # clé et pour le magasin ; le secret dédié ne sert qu'aux exceptions.
           KEY_PASSWORD="${KEY_PASSWORD_OPT:-$STORE_PASSWORD}"
-          KEY_ALIAS="${KEY_ALIAS_OPT:-$DEFAULT_KEY_ALIAS}"
+
           {
             printf 'storePassword=%s\n' "$STORE_PASSWORD"
             printf 'keyPassword=%s\n' "$KEY_PASSWORD"
             printf 'keyAlias=%s\n' "$KEY_ALIAS"
-            printf 'storeFile=%s\n' "$RUNNER_TEMP/klok-release.p12"
+            printf 'storeFile=%s\n' "$KEYSTORE"
           } > android/key.properties
           echo "key.properties écrit (alias : $KEY_ALIAS)."
 

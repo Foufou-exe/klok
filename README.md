@@ -75,17 +75,20 @@ perdre cette keystore, c'est condamner le patron à désinstaller l'app — et d
 2. La sauvegarder hors du dépôt (gestionnaire de mots de passe ou disque
    chiffré).
 
-3. Copier `android/key.properties.example` en `android/key.properties` et le
-   remplir. Ce fichier est ignoré par git et ne doit jamais être committé.
-   Retrouver l'alias d'une keystore existante :
+3. Générer la configuration de signature — le script lit l'alias dans la
+   keystore et demande le mot de passe sans l'afficher :
 
    ```bash
-   keytool -list -keystore klok-release.p12 -storetype PKCS12
+   ./tool/setup_signing.sh ~/klok-release.p12
    ```
+
+   Il écrit `android/key.properties`, ignoré par git et à ne jamais committer.
+   (Le gabarit `android/key.properties.example` reste disponible pour un
+   remplissage manuel.)
 
    Pour construire depuis la CI plutôt qu'en local, deux secrets GitHub
    suffisent : `KEYSTORE_BASE64` (`base64 -w0 klok-release.p12`) et
-   `KEYSTORE_PASSWORD`.
+   `KEYSTORE_PASSWORD`. L'alias est détecté automatiquement.
 
 4. Compiler :
 

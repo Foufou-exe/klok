@@ -9,8 +9,9 @@ name: Release
 #                     (base64 -w0 klok-release.p12)
 #   KEYSTORE_PASSWORD son mot de passe
 #
+# L'alias n'a pas à être fourni : il est lu dans la keystore avec keytool.
 # Deux secrets facultatifs couvrent les cas particuliers :
-#   KEY_ALIAS         si l'alias diffère de la valeur par défaut ci-dessous
+#   KEY_ALIAS         pour forcer un alias au lieu de le détecter
 #   KEY_PASSWORD      si la clé a un mot de passe distinct du magasin. En
 #                     PKCS12, keytool impose en pratique le même pour les deux,
 #                     donc on réutilise KEYSTORE_PASSWORD par défaut.
@@ -48,7 +49,7 @@ jobs:
           channel: stable
           cache: true
 
-      - run: flutter pub get
+      - run: flutter pub get --enforce-lockfile
 
       - name: Vérifier la cohérence des versions
         # Trois sources doivent s'accorder, sinon la livraison ment :

@@ -53,8 +53,11 @@ gen-external-apklibs
 # Files and directories created by pub
 .dart_tool/
 .packages
-# If you're building an application, you may want to check-in your pubspec.lock
-pubspec.lock
+# pubspec.lock EST versionné : klok est une application, pas une bibliothèque.
+# Sans lui, chaque `pub get` peut résoudre des versions différentes — la CI
+# régénérait le code drift avec une version plus récente que celle ayant servi
+# à produire le fichier committé, et l'APK de production aurait pu embarquer
+# des dépendances jamais testées. Voir dart.dev/guides/libraries/private-files
 
 # Directory created by dartdoc
 # If you don't generate documentation locally you can remove this line.
@@ -413,4 +416,5 @@ hs_err_pid*
 # End of https://www.toptal.com/developers/gitignore/api/windows,visualstudiocode,android,androidstudio,dart,flutter,intellij
 
 # Custom rules (everything added below won't be overriden by 'Generate .gitignore File' if you use 'Update' option)
-
+CLAUDE.md
+.claude/

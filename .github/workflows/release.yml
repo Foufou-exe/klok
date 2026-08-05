@@ -45,17 +45,41 @@ jobs:
 
       - run: flutter pub get
 
-      - name: Vérifier que le tag correspond à la version du pubspec
-        # Un tag v2026.0.11 sur un pubspec resté en 2026.0.10 produirait un APK
-        # dont la version affichée ment, y compris dans les sauvegardes.
+      - name: Vérifier la cohérence des versions
+        # Trois sources doivent s'accorder, sinon la livraison ment :
+        #   • le tag        → nom de la release
+        #   • pubspec.yaml  → versionName de l'APK (et lib/core/version.dart,
+        #                     déjà verrouillé par test/version_test.dart)
+        #   • updates.json  → ce que les tablettes interrogent
+        # Oublier le troisième est le piège du process : la release existe,
+        # mais aucune tablette n'apprend jamais qu'elle est sortie.
         run: |
           TAG="${GITHUB_REF_NAME#v}"
           PUBSPEC=$(grep -m1 '^version:' pubspec.yaml | awk '{print $2}' | cut -d'+' -f1)
+          # jq plutôt qu'un grep : le champ est lu comme du JSON, pas comme du
+          # texte qu'un commentaire pourrait imiter.
+          MANIFEST=$(jq -r '.version' updates.json)
+
           if [ "$TAG" != "$PUBSPEC" ]; then
             echo "::error::Tag $TAG ≠ version du pubspec $PUBSPEC"
             exit 1
           fi
-          echo "Version $PUBSPEC confirmée."
+          if [ "$TAG" != "$MANIFEST" ]; then
+            echo "::error::Tag $TAG ≠ version d'updates.json ($MANIFEST). Bumpe updates.json, sinon les tablettes ne verront jamais cette version."
+            exit 1
+          fi
+          echo "Version $PUBSPEC cohérente entre le tag, le pubspec et updates.json."
+
+      - name: Rappeler que le manifeste doit vivre sur la branche par défaut
+        # L'app interroge raw.githubusercontent.com/.../main/updates.json. Un
+        # tag posé sur une branche de travail publierait un APK que personne ne
+        # se verrait proposer.
+        run: |
+          # checkout@v4 ne rapatrie qu'un commit : il faut aller chercher main.
+          git fetch --depth=100 origin main || true
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main 2>/dev/null; then
+            echo "::warning::Ce tag n'est pas sur main. L'APK sera publié, mais updates.json ne sera pas servi tant que la branche n'est pas fusionnée dans main."
+          fi
 
       - run: flutter test
 
@@ -70,13 +94,22 @@ jobs:
           echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/klok-release.jks"
 
       - name: Écrire key.properties
+        # Les secrets transitent par l'environnement plutôt que par une
+        # substitution `${{ }}` directe dans le script : un mot de passe
+        # contenant un backtick, un `$` ou un antislash serait sinon réinterprété
+        # par le shell et écrirait une valeur fausse — échec de signature
+        # incompréhensible à déboguer.
+        env:
+          STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
-          cat > android/key.properties <<EOF
-          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword=${{ secrets.KEY_PASSWORD }}
-          keyAlias=${{ secrets.KEY_ALIAS }}
-          storeFile=$RUNNER_TEMP/klok-release.jks
-          EOF
+          {
+            printf 'storePassword=%s\n' "$STORE_PASSWORD"
+            printf 'keyPassword=%s\n' "$KEY_PASSWORD"
+            printf 'keyAlias=%s\n' "$KEY_ALIAS"
+            printf 'storeFile=%s\n' "$RUNNER_TEMP/klok-release.jks"
+          } > android/key.properties
 
       - name: Compiler l'APK release
         run: flutter build apk --release

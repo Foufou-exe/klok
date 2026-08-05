@@ -12,6 +12,10 @@
 #    disque chiffré, coffre-fort). Sans elle, plus aucune mise à jour possible.
 #
 # 3. Renseigne les 4 valeurs ci-dessous.
+#
+# Note : ce fichier est lu par java.util.Properties, où l'antislash sert
+# d'échappement (`\n` devient un saut de ligne, `\x` devient `x`). Évite les
+# antislashs dans les mots de passe, ou double-les.
 
 storePassword=motDePasseDuKeystore
 keyPassword=motDePasseDeLaCle

@@ -23,7 +23,7 @@ val keystoreProperties = Properties().apply {
 val hasReleaseKeystore = keystorePropertiesFile.exists()
 
 android {
-    namespace = "fr.foufou.klok"
+    namespace = "fr.tm.klok"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -39,7 +39,7 @@ android {
     defaultConfig {
         // Gravé : changer cet ID après une première installation force une
         // désinstallation (donc la perte de la base) sur la tablette.
-        applicationId = "fr.foufou.klok"
+        applicationId = "fr.tm.klok"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

@@ -1,4 +1,4 @@
-package fr.foufou.klok
+package fr.tm.klok
 
 import io.flutter.embedding.android.FlutterActivity
 

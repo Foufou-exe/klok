@@ -28,8 +28,12 @@ deploymentTargetDropDown.xml
 render.experimental.xml
 
 # Keystore files
+# PKCS12 (.p12/.pfx) est le format recommandé — voir README. Sans ces motifs,
+# une keystore de production posée dans le dépôt serait committée en clair.
 *.jks
 *.keystore
+*.p12
+*.pfx
 
 # Google Services (e.g. APIs or Firebase)
 google-services.json

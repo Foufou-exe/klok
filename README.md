@@ -55,11 +55,21 @@ d'installer une mise à jour dont la signature diffère de celle déjà en place
 perdre cette keystore, c'est condamner le patron à désinstaller l'app — et donc
 à perdre ses données — pour passer à la version suivante.
 
-1. Générer la keystore, **une seule fois** :
+1. Générer la keystore, **une seule fois**, au format PKCS12 :
 
    ```bash
-   keytool -genkey -v -keystore ~/klok-release.jks \
-     -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -alias klok
+   keytool -genkeypair -v -keystore ~/klok-release.p12 \
+     -storetype PKCS12 -keyalg RSA -keysize 2048 -validity 10000 -alias klok
+   ```
+
+   PKCS12 et non JKS : ce dernier est un format propriétaire déprécié, sur
+   lequel `keytool` émet un avertissement. Si une keystore JKS existe déjà, la
+   **migrer** plutôt qu'en recréer une — l'app doit conserver la même clé de
+   signature pour rester mettable à jour :
+
+   ```bash
+   keytool -importkeystore -srckeystore klok-release.jks \
+     -destkeystore klok-release.p12 -deststoretype pkcs12
    ```
 
 2. La sauvegarder hors du dépôt (gestionnaire de mots de passe ou disque

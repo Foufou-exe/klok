@@ -5,11 +5,23 @@
 # 1. Génère la keystore (une seule fois, à conserver précieusement — la perdre
 #    signifie ne plus jamais pouvoir mettre à jour l'app installée) :
 #
-#    keytool -genkey -v -keystore %USERPROFILE%\klok-release.jks \
-#      -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -alias klok
+#    keytool -genkeypair -v -keystore %USERPROFILE%\klok-release.p12 \
+#      -storetype PKCS12 -keyalg RSA -keysize 2048 -validity 10000 -alias klok
 #
-# 2. Sauvegarde `klok-release.jks` hors du repo (gestionnaire de mots de passe,
-#    disque chiffré, coffre-fort). Sans elle, plus aucune mise à jour possible.
+#    PKCS12 et non JKS : JKS est un format propriétaire déprécié, et keytool
+#    affiche un avertissement invitant à migrer. PKCS12 est le format standard
+#    et le défaut de keytool depuis Java 9. Android Gradle le lit sans réglage
+#    supplémentaire.
+#
+#    Si tu as déjà généré une keystore JKS, migre-la plutôt que d'en créer une
+#    autre — l'app doit garder LA MÊME clé de signature pour rester mettable à
+#    jour :
+#
+#    keytool -importkeystore -srckeystore klok-release.jks \
+#      -destkeystore klok-release.p12 -deststoretype pkcs12
+#
+# 2. Sauvegarde la keystore hors du repo (gestionnaire de mots de passe, disque
+#    chiffré, coffre-fort). Sans elle, plus aucune mise à jour possible.
 #
 # 3. Renseigne les 4 valeurs ci-dessous.
 #
@@ -20,5 +32,5 @@
 storePassword=motDePasseDuKeystore
 keyPassword=motDePasseDeLaCle
 keyAlias=klok
-# Chemin absolu vers le .jks (barres obliques normales, même sous Windows).
-storeFile=C:/Users/ton-user/klok-release.jks
+# Chemin absolu vers la keystore (barres obliques normales, même sous Windows).
+storeFile=C:/Users/ton-user/klok-release.p12

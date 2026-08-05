@@ -77,6 +77,15 @@ perdre cette keystore, c'est condamner le patron à désinstaller l'app — et d
 
 3. Copier `android/key.properties.example` en `android/key.properties` et le
    remplir. Ce fichier est ignoré par git et ne doit jamais être committé.
+   Retrouver l'alias d'une keystore existante :
+
+   ```bash
+   keytool -list -keystore klok-release.p12 -storetype PKCS12
+   ```
+
+   Pour construire depuis la CI plutôt qu'en local, deux secrets GitHub
+   suffisent : `KEYSTORE_BASE64` (`base64 -w0 klok-release.p12`) et
+   `KEYSTORE_PASSWORD`.
 
 4. Compiler :
 

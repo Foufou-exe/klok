@@ -4,16 +4,21 @@ name: Release
 # production et l'attache à une release GitHub, qui sert de canal de
 # distribution privé.
 #
-# Secrets requis (Settings → Secrets and variables → Actions) :
+# Secrets requis (Settings → Secrets and variables → Actions) — deux seulement :
 #   KEYSTORE_BASE64   la keystore PKCS12 encodée en base64
 #                     (base64 -w0 klok-release.p12)
-#   KEYSTORE_PASSWORD mot de passe du keystore
-#   KEY_PASSWORD      mot de passe de la clé
-#   KEY_ALIAS         alias de la clé (par ex. « klok »)
+#   KEYSTORE_PASSWORD son mot de passe
 #
-# Sans ces secrets, le job échoue volontairement plutôt que de produire un APK
-# signé en debug : un tel APK ne pourrait pas mettre à jour une installation
-# existante.
+# Deux secrets facultatifs couvrent les cas particuliers :
+#   KEY_ALIAS         si l'alias diffère de la valeur par défaut ci-dessous
+#   KEY_PASSWORD      si la clé a un mot de passe distinct du magasin. En
+#                     PKCS12, keytool impose en pratique le même pour les deux,
+#                     donc on réutilise KEYSTORE_PASSWORD par défaut.
+#
+# Sans les secrets requis, le job échoue volontairement plutôt que de produire
+# un APK signé en debug : un tel APK ne pourrait pas mettre à jour une
+# installation existante.
+
 on:
   push:
     tags: ['v*']
@@ -24,6 +29,10 @@ permissions:
 
 env:
   FLUTTER_VERSION: '3.41.7'
+  # L'alias n'est pas un secret : c'est une étiquette interne au fichier, pas
+  # un élément d'authentification. Le figer ici évite un secret de plus à
+  # configurer et à ne pas perdre.
+  DEFAULT_KEY_ALIAS: klok
 
 jobs:
   release:
@@ -101,15 +110,25 @@ jobs:
         # incompréhensible à déboguer.
         env:
           STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          # Facultatifs : vides si les secrets ne sont pas définis.
+          KEY_PASSWORD_OPT: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS_OPT: ${{ secrets.KEY_ALIAS }}
         run: |
+          if [ -z "$STORE_PASSWORD" ]; then
+            echo "::error::Secret KEYSTORE_PASSWORD absent — impossible de signer."
+            exit 1
+          fi
+          # Repli sur le mot de passe du magasin et sur l'alias par défaut :
+          # deux secrets suffisent dans le cas courant.
+          KEY_PASSWORD="${KEY_PASSWORD_OPT:-$STORE_PASSWORD}"
+          KEY_ALIAS="${KEY_ALIAS_OPT:-$DEFAULT_KEY_ALIAS}"
           {
             printf 'storePassword=%s\n' "$STORE_PASSWORD"
             printf 'keyPassword=%s\n' "$KEY_PASSWORD"
             printf 'keyAlias=%s\n' "$KEY_ALIAS"
             printf 'storeFile=%s\n' "$RUNNER_TEMP/klok-release.p12"
           } > android/key.properties
+          echo "key.properties écrit (alias : $KEY_ALIAS)."
 
       - name: Compiler l'APK release
         run: flutter build apk --release

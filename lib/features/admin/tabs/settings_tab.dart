@@ -26,6 +26,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../../core/version.dart';
 import '../../../data/repositories/settings_repository.dart';
+import '../../../services/update_service.dart';
 import '../../../design/tokens.dart';
 import '../../../state/admin_session.dart';
 import '../../../state/providers.dart';
@@ -329,37 +330,54 @@ class SettingsTab extends ConsumerWidget {
   }
 
   // ── Mises à jour ─────────────────────────────────────────────
+  //
+  // Unique requête réseau de l'app, et uniquement sur ce geste du patron.
+  // Rien n'est envoyé, rien ne s'installe tout seul : voir la note en tête de
+  // `update_service.dart`.
   Future<void> _checkUpdates(BuildContext context, WidgetRef ref) async {
-    final messenger = ScaffoldMessenger.of(context);
-    // Klok n'a pas de serveur de MAJ : on ne peut donc pas vraiment vérifier.
-    // On stamp la date du check manuel — utile si plus tard on branche un
-    // canal privé (Firebase App Distribution) on saura quand l'utilisateur a
-    // ouvert ce dialog la dernière fois.
+    // Indicateur d'attente : sur une tablette hors réseau, la requête va au
+    // bout du timeout et le patron doit comprendre qu'il se passe quelque chose.
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const AlertDialog(
+        content: Row(
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            SizedBox(width: 16),
+            Expanded(child: Text('Vérification…')),
+          ],
+        ),
+      ),
+    );
+
+    final result = await const UpdateService().check();
+
+    // On note la date même en cas d'échec : le patron a bien vérifié, c'est le
+    // réseau qui n'a pas suivi.
     await ref
         .read(settingsRepositoryProvider)
         .set(
           SettingsKeys.lastUpdateCheckAt,
           DateTime.now().toUtc().toIso8601String(),
         );
+
     if (!context.mounted) return;
-    showDialog<void>(
+    Navigator.pop(context); // ferme l'indicateur d'attente
+    if (!context.mounted) return;
+
+    await showDialog<void>(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Mises à jour'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Version installée : $kAppVersion'),
-            const SizedBox(height: 10),
-            Text(
-              "Klok est 100 % hors-ligne — il n'y a pas de canal automatique "
-              "de mise à jour. Pour passer à une nouvelle version, ton "
-              "installateur te fournira un APK signé à transférer "
-              "manuellement.",
-              style: TextStyle(fontSize: 13, color: KlokTokens.inkSoft),
-            ),
-          ],
+          children: _updateDialogBody(result),
         ),
         actions: [
           TextButton(
@@ -369,9 +387,53 @@ class SettingsTab extends ConsumerWidget {
         ],
       ),
     );
-    messenger.showSnackBar(
-      const SnackBar(content: Text('Vérification notée.')),
-    );
+  }
+
+  List<Widget> _updateDialogBody(UpdateCheckResult result) {
+    final soft = TextStyle(fontSize: 13, color: KlokTokens.inkSoft);
+
+    switch (result) {
+      case UpdateUpToDate(:final currentVersion):
+        return [
+          Text('Klok est à jour.'),
+          const SizedBox(height: 10),
+          Text('Version installée : $currentVersion', style: soft),
+        ];
+
+      case UpdateAvailable(:final version, :final url, :final notes):
+        return [
+          Text(
+            'Version $version disponible.',
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 6),
+          Text('Version installée : $kAppVersion', style: soft),
+          if (notes != null && notes.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(notes, style: soft),
+          ],
+          const SizedBox(height: 12),
+          Text(
+            "Fais une sauvegarde avant de mettre à jour, puis télécharge l'APK "
+            'depuis :',
+            style: soft,
+          ),
+          const SizedBox(height: 6),
+          SelectableText(
+            url,
+            style: TextStyle(fontSize: 12, color: KlokTokens.terra700),
+          ),
+        ];
+
+      case UpdateCheckFailed(:final reason):
+        return [
+          Text('Vérification impossible.'),
+          const SizedBox(height: 10),
+          Text(reason, style: soft),
+          const SizedBox(height: 10),
+          Text('Version installée : $kAppVersion', style: soft),
+        ];
+    }
   }
 }
 

@@ -1,4 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Seule permission demandée par Klok, et seule entorse à la contrainte
+         hors-ligne : la vérification de mise à jour, déclenchée manuellement
+         par le patron depuis les Réglages (cf. lib/services/update_service.dart).
+         Aucune donnée métier ne sort de la tablette — c'est un GET sur un
+         fichier de version, rien n'est envoyé. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:label="Klok"
         android:name="${applicationName}"

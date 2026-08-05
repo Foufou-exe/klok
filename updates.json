@@ -1,0 +1,6 @@
+{
+  "_comment": "Manifeste de mise à jour lu par l'app quand le patron appuie sur « Vérifier » dans les Réglages. Bumper `version` au moment de publier une release, et faire pointer `url` vers la page de téléchargement de l'APK. Doit rester servi en HTTPS et accessible sans authentification.",
+  "version": "2026.0.10",
+  "url": "https://github.com/Foufou-exe/klok/releases/latest",
+  "notes": ""
+}

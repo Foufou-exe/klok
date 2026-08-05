@@ -30,7 +30,9 @@
       "Bash(tail -80 \"C:\\\\\\\\Users\\\\\\\\thiba\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\claude\\\\\\\\C--Users-thiba-Documents-Environnement-dev-klok\\\\\\\\406e4ee5-fd5e-4f97-97bd-863782d000ed\\\\\\\\tasks\\\\\\\\b6o9w8vne.output\")",
       "Bash(tasklist)",
       "Bash(cat \"C:\\\\\\\\Users\\\\\\\\thiba\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\claude\\\\\\\\C--Users-thiba-Documents-Environnement-dev-klok\\\\\\\\406e4ee5-fd5e-4f97-97bd-863782d000ed\\\\\\\\tasks\\\\\\\\b6pwufegm.output\")",
-      "Bash(grep -qE \"issues found|No issues found|^error\" \"C:\\\\\\\\Users\\\\\\\\thiba\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\claude\\\\\\\\C--Users-thiba-Documents-Environnement-dev-klok\\\\\\\\406e4ee5-fd5e-4f97-97bd-863782d000ed\\\\\\\\tasks\\\\\\\\b6o9w8vne.output\")"
+      "Bash(grep -qE \"issues found|No issues found|^error\" \"C:\\\\\\\\Users\\\\\\\\thiba\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\claude\\\\\\\\C--Users-thiba-Documents-Environnement-dev-klok\\\\\\\\406e4ee5-fd5e-4f97-97bd-863782d000ed\\\\\\\\tasks\\\\\\\\b6o9w8vne.output\")",
+      "Bash(flutter clean *)",
+      "Bash(flutter build *)"
     ]
   }
 }

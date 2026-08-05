@@ -12,7 +12,8 @@ IDE recommandé : Android Studio (plugins Flutter + Dart).
 
 Ces contraintes dictent presque toutes les décisions d'architecture et doivent être respectées strictement :
 
-- **100% local, 100% offline.** Aucune base distante, aucune API externe, aucun compte cloud. Les données ne quittent jamais la tablette. Tout l'I/O sortant passe par le share sheet natif (`share_plus`), déclenché par le patron.
+- **100% local, 100% offline pour les données.** Aucune base distante, aucun compte cloud, aucune synchronisation. Les données ne quittent jamais la tablette. Tout l'I/O sortant de données passe par le share sheet natif (`share_plus`), déclenché par le patron.
+  - **Unique exception, strictement encadrée** : la vérification de mise à jour (`lib/services/update_service.dart`). Un `GET` sur un JSON statique, déclenché *uniquement* par le patron depuis Réglages → Vérifier. Rien n'est envoyé (pas d'identifiant d'appareil, pas de télémétrie), rien ne s'installe automatiquement, et un échec réseau est sans conséquence. C'est ce qui justifie la permission `INTERNET` du manifeste. Toute extension de cet usage réseau doit être discutée : la règle par défaut reste « pas de réseau ».
 - **Cible : tablette Android, paysage.** Design tactile, zones de tap larges.
 - **Deux personas, un appareil :**
   - *Salarié* : pointage (début/fin activité, début/fin pause). Parcours ultra-simple. Écran par défaut au lancement.
@@ -93,7 +94,15 @@ Découpage en couches, du bas vers le haut :
 
 ## Distribution & updates
 
-App privée, jamais sur store public. APK signé avec une keystore stable (à sauvegarder précieusement). MAJ via canal privé (Firebase App Distribution, lien APK privé, ou transfert manuel). Pas d'auto-update silencieuse — flux "MAJ dispo → installer ?" déclenché par le patron. Versionning dans `pubspec.yaml` (`version: X.Y.Z+build`).
+App privée, jamais sur store public. APK signé avec une keystore stable (à sauvegarder précieusement — sa perte interdit toute MAJ d'une installation existante). Pas d'auto-update silencieuse : le patron déclenche, télécharge et installe.
+
+**Chaîne de livraison en place :**
+1. Bumper `pubspec.yaml` *et* `lib/core/version.dart` (un test échoue s'ils divergent).
+2. Mettre à jour `updates.json` à la racine (c'est lui que l'app interroge).
+3. Taguer `vX.Y.Z` → le workflow `.github/workflows/release.yml` compile un APK signé (keystore dans les secrets GitHub) et publie une release. Le workflow refuse de tourner si le tag ne correspond pas au pubspec, ou si la keystore manque.
+4. Le patron voit la MAJ via Réglages → Vérifier, et installe l'APK par-dessus (les données sont conservées).
+
+**Secrets GitHub requis** : `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_PASSWORD`, `KEY_ALIAS`.
 
 ## Gotchas connus
 

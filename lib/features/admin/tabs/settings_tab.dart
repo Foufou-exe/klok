@@ -43,7 +43,7 @@ class SettingsTab extends ConsumerWidget {
     final lastUpdateCheck =
         ref.watch(lastUpdateCheckAtProvider).asData?.value;
 
-    final reminder = _BackupReminderFreq.parse(reminderFreq);
+    final reminder = BackupReminderFreq.parse(reminderFreq);
 
     final items = <_SettingItem>[
       _SettingItem(
@@ -198,6 +198,10 @@ class SettingsTab extends ConsumerWidget {
     // ouverture de /admin.
     await settings.delete(SettingsKeys.pinHash);
     await settings.delete(SettingsKeys.pinSalt);
+    await settings.delete(SettingsKeys.pinAlgo);
+    // Le patron vient de prouver son identité : on repart d'une ardoise nette
+    // côté temporisation, sinon d'anciens échecs bloqueraient la re-saisie.
+    await settings.resetFailures();
     // Invalide les providers concernés et quitte l'admin.
     ref.invalidate(hasAdminPinProvider);
     ref.read(adminUnlockedProvider.notifier).lock();
@@ -271,9 +275,9 @@ class SettingsTab extends ConsumerWidget {
   Future<void> _editReminder(
     BuildContext context,
     WidgetRef ref,
-    _BackupReminderFreq current,
+    BackupReminderFreq current,
   ) async {
-    final selected = await showDialog<_BackupReminderFreq>(
+    final selected = await showDialog<BackupReminderFreq>(
       context: context,
       builder: (ctx) {
         var pending = current;
@@ -283,7 +287,7 @@ class SettingsTab extends ConsumerWidget {
             // Flutter 3.32+ a deprecated groupValue/onChanged sur chaque
             // RadioListTile au profit d'un ancêtre RadioGroup<T> qui gère le
             // group value en un seul endroit.
-            content: RadioGroup<_BackupReminderFreq>(
+            content: RadioGroup<BackupReminderFreq>(
               groupValue: pending,
               onChanged: (v) {
                 if (v != null) setLocal(() => pending = v);
@@ -292,8 +296,8 @@ class SettingsTab extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  for (final freq in _BackupReminderFreq.values)
-                    RadioListTile<_BackupReminderFreq>(
+                  for (final freq in BackupReminderFreq.values)
+                    RadioListTile<BackupReminderFreq>(
                       value: freq,
                       title: Text(freq.label),
                     ),
@@ -379,24 +383,8 @@ class SettingsTab extends ConsumerWidget {
 // Modèles & helpers
 // ─────────────────────────────────────────────────────────────
 
-enum _BackupReminderFreq {
-  none(key: 'none', label: 'Aucun rappel'),
-  weekly(key: 'weekly', label: 'Hebdomadaire · lundi'),
-  monthly(key: 'monthly', label: 'Mensuel · 1er du mois');
-
-  const _BackupReminderFreq({required this.key, required this.label});
-  final String key;
-  final String label;
-
-  static _BackupReminderFreq parse(String? raw) {
-    for (final f in _BackupReminderFreq.values) {
-      if (f.key == raw) return f;
-    }
-    // Default : weekly. Cohérent avec ce que disait la sub-card avant
-    // qu'on câble le réglage.
-    return _BackupReminderFreq.weekly;
-  }
-}
+// `BackupReminderFreq` vit désormais dans core/backup_reminder.dart, avec la
+// logique d'échéance que consomme le bandeau de l'admin.
 
 String _formatRelativeDate(String iso) {
   final parsed = DateTime.tryParse(iso)?.toLocal();

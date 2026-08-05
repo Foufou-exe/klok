@@ -76,6 +76,12 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
               onSelect: _select,
               onExit: _exitAdmin,
             ),
+            // Bandeau de rappel de sauvegarde, promis au patron dans les
+            // Réglages. Placé dans la coquille et non dans un onglet : il doit
+            // se voir quel que soit l'endroit où le patron se trouve.
+            _BackupReminderBanner(
+              onOpenBackup: () => _select(AdminTab.backup),
+            ),
             Expanded(
               child: Padding(
                 padding: EdgeInsets.fromLTRB(horiz, 28, horiz, 28),
@@ -105,6 +111,54 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
       case AdminTab.settings:
         return const SettingsTab();
     }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Bandeau : sauvegarde en retard
+// ─────────────────────────────────────────────────────────────
+class _BackupReminderBanner extends ConsumerWidget {
+  const _BackupReminderBanner({required this.onOpenBackup});
+
+  final VoidCallback onOpenBackup;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final status = ref.watch(backupReminderStatusProvider);
+    if (!status.needsAttention) return const SizedBox.shrink();
+
+    final never = status == BackupReminderStatus.never;
+    final horiz = MediaQuery.sizeOf(context).width >= 900 ? 28.0 : 20.0;
+
+    return Container(
+      width: double.infinity,
+      color: KlokTokens.amberBg,
+      padding: EdgeInsets.fromLTRB(horiz, 12, horiz, 12),
+      child: Row(
+        children: [
+          Icon(Icons.backup_outlined, size: 20, color: KlokTokens.terra700),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              never
+                  ? "Aucune sauvegarde n'a encore été faite. Les données ne "
+                      'vivent que sur cette tablette.'
+                  : 'Ta dernière sauvegarde date : pense à en refaire une.',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: KlokTokens.ink800,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          TextButton(
+            onPressed: onOpenBackup,
+            child: const Text('Sauvegarder'),
+          ),
+        ],
+      ),
+    );
   }
 }
 

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/backup_reminder.dart';
 import '../data/db/app_database.dart';
 import '../data/repositories/employee_repository.dart';
 import '../data/repositories/session_repository.dart';
@@ -7,6 +8,8 @@ import '../data/repositories/settings_repository.dart';
 import '../services/backup_service.dart';
 import '../services/payroll_pdf_service.dart';
 
+export '../core/backup_reminder.dart'
+    show BackupReminderFreq, BackupReminderStatus;
 export '../data/repositories/session_repository.dart'
     show EmployeeClockState, SessionRepository;
 
@@ -105,6 +108,26 @@ final backupReminderFreqProvider = StreamProvider<String?>((ref) {
   return ref
       .watch(settingsRepositoryProvider)
       .watch(SettingsKeys.backupReminderFreq);
+});
+
+/// Fréquence du rappel, déjà interprétée.
+final backupReminderProvider = Provider<BackupReminderFreq>((ref) {
+  return BackupReminderFreq.parse(
+    ref.watch(backupReminderFreqProvider).asData?.value,
+  );
+});
+
+/// Faut-il alerter le patron sur une sauvegarde en retard ?
+///
+/// Croise la fréquence choisie et la date de dernière sauvegarde. Réévalué à
+/// chaque tick d'horloge pour que le bandeau apparaisse sans relancer l'app.
+final backupReminderStatusProvider = Provider<BackupReminderStatus>((ref) {
+  final now = ref.watch(tickerProvider).asData?.value;
+  return backupReminderStatus(
+    lastBackupAtIso: ref.watch(lastBackupAtProvider).asData?.value,
+    freq: ref.watch(backupReminderProvider),
+    now: now,
+  );
 });
 
 /// Date du dernier "check" de mise à jour manuel par le patron (ISO8601).

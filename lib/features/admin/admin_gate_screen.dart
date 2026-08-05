@@ -13,6 +13,8 @@
 //
 // Ref design : shared/app.jsx (fonction PinGate).
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -106,6 +108,10 @@ class _PinEntryState extends ConsumerState<_PinEntry>
   String _pin = '';
   bool _error = false;
   bool _busy = false;
+  // Temporisation anti-force-brute restante (cf. SettingsRepository). Tant
+  // qu'elle est non nulle, le keypad est inerte et on affiche le décompte.
+  Duration _lockout = Duration.zero;
+  Timer? _lockoutTicker;
   late final AnimationController _shake;
   // Shuffle figé pour la durée de la session de saisie. Si la gate se
   // referme et se ré-ouvre, on aura un nouvel ordre.
@@ -118,16 +124,35 @@ class _PinEntryState extends ConsumerState<_PinEntry>
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
+    // Le compteur d'échecs est persisté : redémarrer l'app ne remet pas les
+    // compteurs à zéro, donc on peut arriver ici déjà temporisé.
+    _refreshLockout();
   }
 
   @override
   void dispose() {
+    _lockoutTicker?.cancel();
     _shake.dispose();
     super.dispose();
   }
 
+  Future<void> _refreshLockout() async {
+    final left = await ref.read(settingsRepositoryProvider).remainingLockout();
+    if (!mounted) return;
+    setState(() => _lockout = left);
+    _lockoutTicker?.cancel();
+    if (left > Duration.zero) {
+      _lockoutTicker = Timer.periodic(const Duration(seconds: 1), (t) {
+        if (!mounted) return t.cancel();
+        final next = _lockout - const Duration(seconds: 1);
+        setState(() => _lockout = next.isNegative ? Duration.zero : next);
+        if (_lockout == Duration.zero) t.cancel();
+      });
+    }
+  }
+
   Future<void> _onDigit(String d) async {
-    if (_busy || _pin.length >= kAdminPinLength) return;
+    if (_busy || _locked || _pin.length >= kAdminPinLength) return;
     setState(() => _pin = _pin + d);
     if (_pin.length == kAdminPinLength) {
       setState(() => _busy = true);
@@ -149,12 +174,15 @@ class _PinEntryState extends ConsumerState<_PinEntry>
           _error = false;
           _busy = false;
         });
+        await _refreshLockout();
       }
     }
   }
 
+  bool get _locked => _lockout > Duration.zero;
+
   void _onBackspace() {
-    if (_busy) return;
+    if (_busy || _locked) return;
     if (_pin.isEmpty) return;
     setState(() => _pin = _pin.substring(0, _pin.length - 1));
   }
@@ -178,10 +206,13 @@ class _PinEntryState extends ConsumerState<_PinEntry>
         ),
         const SizedBox(height: 4),
         Text(
-          'Saisis ton PIN à $kAdminPinLength chiffres',
+          _locked
+              ? 'Trop d\'essais — patiente ${_formatLockout(_lockout)}'
+              : 'Saisis ton PIN à $kAdminPinLength chiffres',
           style: TextStyle(
             fontSize: 13,
-            color: KlokTokens.inkSoft,
+            color: _locked ? KlokTokens.danger : KlokTokens.inkSoft,
+            fontWeight: _locked ? FontWeight.w600 : FontWeight.w400,
           ),
         ),
         const SizedBox(height: 28),
@@ -192,10 +223,18 @@ class _PinEntryState extends ConsumerState<_PinEntry>
           shake: _shake,
         ),
         const SizedBox(height: 28),
-        PinKeypad(
-          digits: _digits,
-          onDigit: _onDigit,
-          onBackspace: _onBackspace,
+        // Grisé pendant la temporisation : le keypad reste visible pour ne pas
+        // faire sauter la mise en page, mais n'accepte plus rien.
+        Opacity(
+          opacity: _locked ? 0.35 : 1,
+          child: IgnorePointer(
+            ignoring: _locked,
+            child: PinKeypad(
+              digits: _digits,
+              onDigit: _onDigit,
+              onBackspace: _onBackspace,
+            ),
+          ),
         ),
       ],
     );
@@ -363,4 +402,14 @@ class _HeaderIcon extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Décompte de la temporisation, arrondi à la seconde supérieure pour ne
+/// jamais afficher « 0 s » alors que le clavier est encore inerte.
+String _formatLockout(Duration d) {
+  final total = d.inMilliseconds <= 0 ? 0 : (d.inMilliseconds / 1000).ceil();
+  if (total < 60) return '$total s';
+  final m = total ~/ 60;
+  final s = total % 60;
+  return s == 0 ? '$m min' : '$m min $s s';
 }

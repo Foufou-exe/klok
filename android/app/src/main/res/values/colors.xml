@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Terracotta de la palette Klok — oklch(0.60 0.16 38) converti en sRGB,
+         cf. KlokTokens.terra dans lib/design/tokens.dart. Fond de l'icône
+         adaptative. -->
+    <color name="ic_launcher_background">#CD5630</color>
+</resources>

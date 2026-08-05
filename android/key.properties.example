@@ -1,0 +1,20 @@
+# Gabarit de android/key.properties — COPIE ce fichier en `key.properties`
+# (même dossier) et remplis-le. Le vrai fichier est gitignoré : il ne doit
+# JAMAIS être committé.
+#
+# 1. Génère la keystore (une seule fois, à conserver précieusement — la perdre
+#    signifie ne plus jamais pouvoir mettre à jour l'app installée) :
+#
+#    keytool -genkey -v -keystore %USERPROFILE%\klok-release.jks \
+#      -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -alias klok
+#
+# 2. Sauvegarde `klok-release.jks` hors du repo (gestionnaire de mots de passe,
+#    disque chiffré, coffre-fort). Sans elle, plus aucune mise à jour possible.
+#
+# 3. Renseigne les 4 valeurs ci-dessous.
+
+storePassword=motDePasseDuKeystore
+keyPassword=motDePasseDeLaCle
+keyAlias=klok
+# Chemin absolu vers le .jks (barres obliques normales, même sous Windows).
+storeFile=C:/Users/ton-user/klok-release.jks

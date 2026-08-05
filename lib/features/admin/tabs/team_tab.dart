@@ -797,6 +797,7 @@ class _HistoryTable extends ConsumerWidget {
                         total: rows[i].total,
                         muted: rows[i].isOff,
                         currentEnd: rows[i].current && rows[i].rawEnd == null,
+                        anomaly: rows[i].anomaly,
                       ),
                     ),
                     if (i < rows.length - 1)
@@ -826,6 +827,7 @@ class _HistoryRow extends StatelessWidget {
     this.isHeader = false,
     this.muted = false,
     this.currentEnd = false,
+    this.anomaly,
   });
 
   final String date;
@@ -836,6 +838,7 @@ class _HistoryRow extends StatelessWidget {
   final bool isHeader;
   final bool muted;
   final bool currentEnd;
+  final String? anomaly;
 
   @override
   Widget build(BuildContext context) {
@@ -860,13 +863,26 @@ class _HistoryRow extends StatelessWidget {
 
     Widget cell(String text, {TextAlign align = TextAlign.left}) =>
         Text(text, style: baseStyle, textAlign: align);
+    final label = anomaly;
     return Row(
       children: [
         Expanded(
-          child: Text(
-            isHeader ? date.toUpperCase() : date,
-            style: baseStyle,
-          ),
+          child: label == null || isHeader
+              ? Text(isHeader ? date.toUpperCase() : date, style: baseStyle)
+              : Row(
+                  children: [
+                    Flexible(child: Text(date, style: baseStyle)),
+                    const SizedBox(width: 6),
+                    Tooltip(
+                      message: label,
+                      child: Icon(
+                        Icons.warning_amber_rounded,
+                        size: 16,
+                        color: KlokTokens.warn,
+                      ),
+                    ),
+                  ],
+                ),
         ),
         Expanded(child: cell(isHeader ? start.toUpperCase() : start)),
         Expanded(child: endWidget),
@@ -901,6 +917,7 @@ class _HistoryRowData {
     required this.isOff,
     required this.current,
     this.rawEnd,
+    this.anomaly,
   });
 
   final String date;
@@ -911,6 +928,11 @@ class _HistoryRowData {
   final bool isOff;
   final bool current;
   final DateTime? rawEnd;
+
+  /// Libellé d'anomalie du jour (`SessionWithBreaks.anomalyLabel`), `null` si
+  /// la journée est saine. Les heures restent affichées telles quelles : on
+  /// signale au patron, on ne corrige pas à sa place.
+  final String? anomaly;
 }
 
 final _employeeHistoryProvider = FutureProvider.autoDispose
@@ -977,6 +999,12 @@ final _employeeHistoryProvider = FutureProvider.autoDispose
       (acc, it) => acc + it.breakDuration,
     );
 
+    // Première anomalie rencontrée sur la journée — suffisant pour attirer
+    // l'œil, le détail se lit sur la ligne concernée.
+    final anomaly = items
+        .map((it) => it.anomalyLabel)
+        .firstWhere((label) => label != null, orElse: () => null);
+
     rows.add(_HistoryRowData(
       date: dayLabel,
       start: formatHHmm(firstStart),
@@ -988,6 +1016,7 @@ final _employeeHistoryProvider = FutureProvider.autoDispose
       isOff: false,
       current: hasOpen,
       rawEnd: lastEnd,
+      anomaly: anomaly,
     ));
   }
   return rows;

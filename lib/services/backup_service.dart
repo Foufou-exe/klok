@@ -41,9 +41,12 @@ class BackupService {
 
   final AppDatabase _db;
 
-  Future<BackupResult> exportAll() async {
-    final employees =
-        await _db.select(_db.employees).get();
+  /// Sérialise toute la base en bytes JSON, sans toucher au disque.
+  ///
+  /// Séparé de [exportAll] pour être testable : `getTemporaryDirectory()` passe
+  /// par un canal de plateforme indisponible sous `flutter test`.
+  Future<Uint8List> buildPayloadBytes() async {
+    final employees = await _db.select(_db.employees).get();
     final sessions = await _db.select(_db.workSessions).get();
     final breaks = await _db.select(_db.breaks).get();
     final settings = await _db.select(_db.appSettings).get();
@@ -69,8 +72,11 @@ class BackupService {
       'data': data,
     };
 
-    final bytes =
-        Uint8List.fromList(utf8.encode(jsonEncode(payload)));
+    return Uint8List.fromList(utf8.encode(jsonEncode(payload)));
+  }
+
+  Future<BackupResult> exportAll() async {
+    final bytes = await buildPayloadBytes();
     final dir = await getTemporaryDirectory();
     final stamp = DateTime.now().toIso8601String().replaceAll(':', '-');
     final file = File(p.join(dir.path, 'klok_backup_$stamp.json'));
@@ -131,8 +137,14 @@ class BackupService {
       throw const FormatException('Sauvegarde corrompue.');
     }
 
+    // Remplacement total. On garde les contraintes FK actives : SQLite ignore
+    // silencieusement `PRAGMA foreign_keys` à l'intérieur d'une transaction
+    // (c'est un no-op documenté), donc les désactiver ici serait une illusion.
+    // L'intégrité tient à l'ordre des opérations — suppression des feuilles
+    // vers la racine, réinsertion de la racine vers les feuilles — et les FK
+    // servent alors de filet : un backup incohérent échoue et la transaction
+    // est annulée, plutôt que d'importer des sessions orphelines.
     await _db.transaction(() async {
-      await _db.customStatement('PRAGMA foreign_keys = OFF');
       await _db.delete(_db.breaks).go();
       await _db.delete(_db.workSessions).go();
       await _db.delete(_db.employees).go();
@@ -180,7 +192,6 @@ class BackupService {
               value: m['value'] as String,
             ));
       }
-      await _db.customStatement('PRAGMA foreign_keys = ON');
     });
   }
 

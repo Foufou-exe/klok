@@ -15,11 +15,16 @@ void main() {
       multiLine: true,
     ).firstMatch(pubspec);
 
-    expect(match, isNotNull, reason: 'champ `version:` introuvable dans pubspec.yaml');
+    expect(
+      match,
+      isNotNull,
+      reason: 'champ `version:` introuvable dans pubspec.yaml',
+    );
     expect(
       kAppVersion,
       match!.group(1),
-      reason: 'lib/core/version.dart doit suivre pubspec.yaml — '
+      reason:
+          'lib/core/version.dart doit suivre pubspec.yaml — '
           'bumper les deux ensemble à chaque release',
     );
   });

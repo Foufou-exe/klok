@@ -69,17 +69,17 @@ class _PickContent extends ConsumerWidget {
     final cols = w >= 1100
         ? 6
         : w >= 850
-            ? 5
-            : w >= 680
-                ? 4
-                : w >= 480
-                    ? 3
-                    : 2;
+        ? 5
+        : w >= 680
+        ? 4
+        : w >= 480
+        ? 3
+        : 2;
     final horiz = w >= 900
         ? 48.0
         : w >= 600
-            ? 32.0
-            : 20.0;
+        ? 32.0
+        : 20.0;
     final headerVert = w >= 900 ? 36.0 : 24.0;
 
     // Calcule la taille de pastille en fonction de la largeur de colonne
@@ -109,14 +109,12 @@ class _PickContent extends ConsumerWidget {
                     child: GridView.builder(
                       shrinkWrap: true,
                       physics: const BouncingScrollPhysics(),
-                      gridDelegate:
-                          SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: cols,
                         mainAxisSpacing: 16,
                         crossAxisSpacing: 16,
                         // Pastille (pastilleSize) + gap 12 + nom (~40) + padding
-                        childAspectRatio:
-                            pastilleSize / (pastilleSize + 72),
+                        childAspectRatio: pastilleSize / (pastilleSize + 72),
                       ),
                       itemCount: employees.length,
                       itemBuilder: (ctx, i) {
@@ -199,7 +197,9 @@ class _BrandLogo extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final logoPath = ref.watch(logoPathProvider).asData?.value;
-    if (logoPath != null && logoPath.isNotEmpty && File(logoPath).existsSync()) {
+    if (logoPath != null &&
+        logoPath.isNotEmpty &&
+        File(logoPath).existsSync()) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(8),
         child: Image.file(
@@ -272,10 +272,7 @@ class _Clock extends ConsumerWidget {
         const SizedBox(height: 6),
         Text(
           _capitalize(formatDateFull(now)),
-          style: TextStyle(
-            fontSize: 13,
-            color: KlokTokens.inkSoft,
-          ),
+          style: TextStyle(fontSize: 13, color: KlokTokens.inkSoft),
         ),
       ],
     );
@@ -363,10 +360,7 @@ class _EmployeeTileState extends State<_EmployeeTile> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: KlokTokens.inkSoft,
-                  ),
+                  style: TextStyle(fontSize: 12, color: KlokTokens.inkSoft),
                 ),
               ],
             ],
@@ -475,8 +469,7 @@ class _BottomBand extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final narrow = MediaQuery.sizeOf(context).width < 600;
-    final barName =
-        ref.watch(barNameProvider).asData?.value?.trim() ?? '';
+    final barName = ref.watch(barNameProvider).asData?.value?.trim() ?? '';
     return Container(
       width: double.infinity,
       color: KlokTokens.bgDeep,
@@ -569,23 +562,26 @@ class _TeamSummary extends StatelessWidget {
         ),
       ),
       const WidgetSpan(child: SizedBox(width: 8)),
-      TextSpan(
-        text: '$working en service',
-        style: strongStyle,
-      ),
+      TextSpan(text: '$working en service', style: strongStyle),
     ];
 
     if (breakCount > 0) {
       spans
-        ..add(TextSpan(text: '  ·  ', style: labelStyle.copyWith(color: KlokTokens.muted)))
-        ..add(TextSpan(
-          text: team.breakFirstNames.join(', '),
-          style: strongStyle,
-        ))
-        ..add(TextSpan(
-          text: breakCount > 1 ? ' en pause' : ' en pause',
-          style: labelStyle,
-        ));
+        ..add(
+          TextSpan(
+            text: '  ·  ',
+            style: labelStyle.copyWith(color: KlokTokens.muted),
+          ),
+        )
+        ..add(
+          TextSpan(text: team.breakFirstNames.join(', '), style: strongStyle),
+        )
+        ..add(
+          TextSpan(
+            text: breakCount > 1 ? ' en pause' : ' en pause',
+            style: labelStyle,
+          ),
+        );
     }
 
     return RichText(
@@ -609,16 +605,11 @@ class _AdminLockButton extends StatelessWidget {
         onTap: () => context.push('/admin'),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.lock_outline,
-                size: 16,
-                color: KlokTokens.inkSoft,
-              ),
+              Icon(Icons.lock_outline, size: 16, color: KlokTokens.inkSoft),
               const SizedBox(width: 8),
               Text(
                 'Mode patron',

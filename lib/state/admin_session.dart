@@ -15,5 +15,6 @@ class AdminSessionNotifier extends Notifier<bool> {
   void lock() => state = false;
 }
 
-final adminUnlockedProvider =
-    NotifierProvider<AdminSessionNotifier, bool>(AdminSessionNotifier.new);
+final adminUnlockedProvider = NotifierProvider<AdminSessionNotifier, bool>(
+  AdminSessionNotifier.new,
+);

@@ -21,7 +21,16 @@ import '../../../design/tokens.dart';
 /// Liste 0..9 dans l'ordre standard (1,2,3,4,5,6,7,8,9,0). Le slot d'index 9
 /// correspond à la case du milieu de la dernière ligne (par convention "0").
 const kStandardKeypadDigits = <String>[
-  '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
+  '1',
+  '2',
+  '3',
+  '4',
+  '5',
+  '6',
+  '7',
+  '8',
+  '9',
+  '0',
 ];
 
 /// Renvoie une copie mélangée des chiffres 0..9 — utiliser pour la gate admin.

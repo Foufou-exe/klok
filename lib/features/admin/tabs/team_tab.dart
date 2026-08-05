@@ -82,8 +82,7 @@ class _TeamGrid extends ConsumerWidget {
                     const SizedBox(height: 4),
                     Text(
                       '${employees.length} salarié${employees.length > 1 ? 's' : ''} actif${employees.length > 1 ? 's' : ''}',
-                      style:
-                          TextStyle(fontSize: 14, color: KlokTokens.inkSoft),
+                      style: TextStyle(fontSize: 14, color: KlokTokens.inkSoft),
                     ),
                   ],
                 ),
@@ -134,11 +133,7 @@ class _TeamGrid extends ConsumerWidget {
 // Grille responsive sans dépendre de GridView (on garde l'alignement haut
 // des cartes et la hauteur auto).
 class _Grid extends StatelessWidget {
-  const _Grid({
-    required this.cols,
-    required this.gap,
-    required this.children,
-  });
+  const _Grid({required this.cols, required this.gap, required this.children});
 
   final int cols;
   final double gap;
@@ -158,12 +153,14 @@ class _Grid extends StatelessWidget {
         }
         if (j < cols - 1) row.add(SizedBox(width: gap));
       }
-      rows.add(IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: row,
+      rows.add(
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: row,
+          ),
         ),
-      ));
+      );
       if (i + cols < children.length) rows.add(SizedBox(height: gap));
     }
     return Column(
@@ -237,7 +234,9 @@ class _TeamCard extends ConsumerWidget {
                               ? '${(employee.hourlyRateCents! / 100).toStringAsFixed(2)} €/h'
                               : 'Salarié',
                           style: TextStyle(
-                              fontSize: 12, color: KlokTokens.inkSoft),
+                            fontSize: 12,
+                            color: KlokTokens.inkSoft,
+                          ),
                         ),
                       ],
                     ),
@@ -308,8 +307,7 @@ class _StatusBadge extends StatelessWidget {
       ),
       child: Text(
         label,
-        style:
-            TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: fg),
+        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: fg),
       ),
     );
   }
@@ -328,15 +326,13 @@ class _CornerMetric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cross =
-        alignRight ? CrossAxisAlignment.end : CrossAxisAlignment.start;
+    final cross = alignRight
+        ? CrossAxisAlignment.end
+        : CrossAxisAlignment.start;
     return Column(
       crossAxisAlignment: cross,
       children: [
-        Text(
-          label,
-          style: TextStyle(fontSize: 12, color: KlokTokens.inkSoft),
-        ),
+        Text(label, style: TextStyle(fontSize: 12, color: KlokTokens.inkSoft)),
         const SizedBox(height: 2),
         Text(
           value,
@@ -396,8 +392,9 @@ class _TeamDetail extends ConsumerWidget {
     final month = ref.watch(monthTotalsProvider(employee.id));
 
     final monthTotal = month.asData?.value;
-    final monthDuration =
-        monthTotal != null ? formatDuration(monthTotal.netDuration) : '—';
+    final monthDuration = monthTotal != null
+        ? formatDuration(monthTotal.netDuration)
+        : '—';
     final monthDays = monthTotal?.sessionCount.toString() ?? '—';
     final averageDay = () {
       final m = monthTotal;
@@ -445,8 +442,10 @@ class _TeamDetail extends ConsumerWidget {
                         employee.hourlyRateCents != null
                             ? '${(employee.hourlyRateCents! / 100).toStringAsFixed(2)} €/h · embauché en ${DateFormat('MMMM yyyy', 'fr_FR').format(employee.createdAt.toLocal())}'
                             : 'Salarié · embauché en ${DateFormat('MMMM yyyy', 'fr_FR').format(employee.createdAt.toLocal())}',
-                        style:
-                            TextStyle(fontSize: 14, color: KlokTokens.inkSoft),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: KlokTokens.inkSoft,
+                        ),
                       ),
                     ],
                   ),
@@ -472,7 +471,8 @@ class _TeamDetail extends ConsumerWidget {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                            'L\'export PDF se fait depuis l\'onglet "Export paie".'),
+                          'L\'export PDF se fait depuis l\'onglet "Export paie".',
+                        ),
                       ),
                     );
                   },
@@ -675,9 +675,7 @@ Future<void> _confirmArchive(
   if (!context.mounted) return;
   onBack();
   ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text('${e.firstName} ${e.lastName} archivé'),
-    ),
+    SnackBar(content: Text('${e.firstName} ${e.lastName} archivé')),
   );
 }
 
@@ -748,9 +746,7 @@ class _HistoryTable extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
             decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: KlokTokens.border),
-              ),
+              border: Border(bottom: BorderSide(color: KlokTokens.border)),
             ),
             child: _HistoryRow(
               date: 'Date',
@@ -788,7 +784,9 @@ class _HistoryTable extends ConsumerWidget {
                           ? KlokTokens.successBg
                           : Colors.transparent,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 11),
+                        horizontal: 20,
+                        vertical: 11,
+                      ),
                       child: _HistoryRow(
                         date: rows[i].date,
                         start: rows[i].start,
@@ -937,90 +935,96 @@ class _HistoryRowData {
 
 final _employeeHistoryProvider = FutureProvider.autoDispose
     .family<List<_HistoryRowData>, int>((ref, employeeId) async {
-  ref.watch(tickerProvider);
-  final repo = ref.watch(sessionRepositoryProvider);
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-  final from = today.subtract(const Duration(days: 11)).toUtc();
-  final to = today.add(const Duration(days: 1)).toUtc();
+      ref.watch(tickerProvider);
+      final repo = ref.watch(sessionRepositoryProvider);
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final from = today.subtract(const Duration(days: 11)).toUtc();
+      final to = today.add(const Duration(days: 1)).toUtc();
 
-  final sessions = await repo.sessionsInRange(employeeId, from, to);
-  final breaks =
-      await repo.breaksForSessions(sessions.map((s) => s.id).toList());
+      final sessions = await repo.sessionsInRange(employeeId, from, to);
+      final breaks = await repo.breaksForSessions(
+        sessions.map((s) => s.id).toList(),
+      );
 
-  // Regrouper les sessions par jour local
-  final byDay = <DateTime, List<SessionWithBreaks>>{};
-  for (final s in sessions) {
-    final local = s.startedAt.toLocal();
-    final day = DateTime(local.year, local.month, local.day);
-    final joined = SessionWithBreaks(
-      session: s,
-      breaks: breaks.where((b) => b.sessionId == s.id).toList(),
-    );
-    byDay.putIfAbsent(day, () => []).add(joined);
-  }
-
-  final rows = <_HistoryRowData>[];
-  for (var i = 0; i < 12; i++) {
-    final day = today.subtract(Duration(days: i));
-    final dayLabel = DateFormat('EEE dd/MM', 'fr_FR').format(day);
-    final items = byDay[day];
-    final isToday = i == 0;
-
-    if (items == null || items.isEmpty) {
-      rows.add(_HistoryRowData(
-        date: dayLabel,
-        start: '—',
-        end: '—',
-        breaks: '—',
-        total: '—',
-        isOff: true,
-        current: isToday,
-      ));
-      continue;
-    }
-
-    items.sort(
-        (a, b) => a.session.startedAt.compareTo(b.session.startedAt));
-    final firstStart = items.first.session.startedAt.toLocal();
-    DateTime? lastEnd;
-    var hasOpen = false;
-    for (final it in items) {
-      if (it.session.endedAt == null) {
-        hasOpen = true;
-      } else {
-        final end = it.session.endedAt!.toLocal();
-        if (lastEnd == null || end.isAfter(lastEnd)) lastEnd = end;
+      // Regrouper les sessions par jour local
+      final byDay = <DateTime, List<SessionWithBreaks>>{};
+      for (final s in sessions) {
+        final local = s.startedAt.toLocal();
+        final day = DateTime(local.year, local.month, local.day);
+        final joined = SessionWithBreaks(
+          session: s,
+          breaks: breaks.where((b) => b.sessionId == s.id).toList(),
+        );
+        byDay.putIfAbsent(day, () => []).add(joined);
       }
-    }
-    final netTotal = sumNet(items);
-    final breakTotal = items.fold<Duration>(
-      Duration.zero,
-      (acc, it) => acc + it.breakDuration,
-    );
 
-    // Première anomalie rencontrée sur la journée — suffisant pour attirer
-    // l'œil, le détail se lit sur la ligne concernée.
-    final anomaly = items
-        .map((it) => it.anomalyLabel)
-        .firstWhere((label) => label != null, orElse: () => null);
+      final rows = <_HistoryRowData>[];
+      for (var i = 0; i < 12; i++) {
+        final day = today.subtract(Duration(days: i));
+        final dayLabel = DateFormat('EEE dd/MM', 'fr_FR').format(day);
+        final items = byDay[day];
+        final isToday = i == 0;
 
-    rows.add(_HistoryRowData(
-      date: dayLabel,
-      start: formatHHmm(firstStart),
-      end: lastEnd != null ? formatHHmm(lastEnd) : '—',
-      breaks: breakTotal.inMinutes > 0
-          ? '${breakTotal.inMinutes} min'
-          : '—',
-      total: formatDuration(netTotal),
-      isOff: false,
-      current: hasOpen,
-      rawEnd: lastEnd,
-      anomaly: anomaly,
-    ));
-  }
-  return rows;
-});
+        if (items == null || items.isEmpty) {
+          rows.add(
+            _HistoryRowData(
+              date: dayLabel,
+              start: '—',
+              end: '—',
+              breaks: '—',
+              total: '—',
+              isOff: true,
+              current: isToday,
+            ),
+          );
+          continue;
+        }
+
+        items.sort(
+          (a, b) => a.session.startedAt.compareTo(b.session.startedAt),
+        );
+        final firstStart = items.first.session.startedAt.toLocal();
+        DateTime? lastEnd;
+        var hasOpen = false;
+        for (final it in items) {
+          if (it.session.endedAt == null) {
+            hasOpen = true;
+          } else {
+            final end = it.session.endedAt!.toLocal();
+            if (lastEnd == null || end.isAfter(lastEnd)) lastEnd = end;
+          }
+        }
+        final netTotal = sumNet(items);
+        final breakTotal = items.fold<Duration>(
+          Duration.zero,
+          (acc, it) => acc + it.breakDuration,
+        );
+
+        // Première anomalie rencontrée sur la journée — suffisant pour attirer
+        // l'œil, le détail se lit sur la ligne concernée.
+        final anomaly = items
+            .map((it) => it.anomalyLabel)
+            .firstWhere((label) => label != null, orElse: () => null);
+
+        rows.add(
+          _HistoryRowData(
+            date: dayLabel,
+            start: formatHHmm(firstStart),
+            end: lastEnd != null ? formatHHmm(lastEnd) : '—',
+            breaks: breakTotal.inMinutes > 0
+                ? '${breakTotal.inMinutes} min'
+                : '—',
+            total: formatDuration(netTotal),
+            isOff: false,
+            current: hasOpen,
+            rawEnd: lastEnd,
+            anomaly: anomaly,
+          ),
+        );
+      }
+      return rows;
+    });
 
 // ─────────────────────────────────────────────────────────────
 // Helpers partagés avec dashboard_tab.dart
@@ -1041,10 +1045,7 @@ class _CircleInitials extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color,
-      ),
+      decoration: BoxDecoration(shape: BoxShape.circle, color: color),
       child: Center(
         child: Text(
           initials,

@@ -40,17 +40,14 @@ class SettingsTab extends ConsumerWidget {
     final barName = ref.watch(barNameProvider).asData?.value ?? 'Non défini';
     final logoPath = ref.watch(logoPathProvider).asData?.value;
     final reminderFreq = ref.watch(backupReminderFreqProvider).asData?.value;
-    final lastUpdateCheck =
-        ref.watch(lastUpdateCheckAtProvider).asData?.value;
+    final lastUpdateCheck = ref.watch(lastUpdateCheckAtProvider).asData?.value;
 
     final reminder = BackupReminderFreq.parse(reminderFreq);
 
     final items = <_SettingItem>[
       _SettingItem(
         title: 'Code PIN admin',
-        sub: hasPin
-            ? '8 chiffres · verrou actif'
-            : 'Aucun PIN · à configurer',
+        sub: hasPin ? '8 chiffres · verrou actif' : 'Aucun PIN · à configurer',
         actionLabel: 'Modifier',
         onTap: () => _changePin(context, ref),
       ),
@@ -138,7 +135,10 @@ class SettingsTab extends ConsumerWidget {
 
   // ── Établissement ────────────────────────────────────────────
   Future<void> _editBarName(
-      BuildContext context, WidgetRef ref, String current) async {
+    BuildContext context,
+    WidgetRef ref,
+    String current,
+  ) async {
     final ctrl = TextEditingController(text: current);
     final result = await showDialog<String>(
       context: context,
@@ -164,10 +164,9 @@ class SettingsTab extends ConsumerWidget {
       ),
     );
     if (result == null) return;
-    await ref.read(settingsRepositoryProvider).set(
-          SettingsKeys.barName,
-          result,
-        );
+    await ref
+        .read(settingsRepositoryProvider)
+        .set(SettingsKeys.barName, result);
   }
 
   // ── PIN ──────────────────────────────────────────────────────
@@ -180,7 +179,8 @@ class SettingsTab extends ConsumerWidget {
       builder: (_) => AlertDialog(
         title: const Text('Modifier le PIN'),
         content: const Text(
-            "Tu vas être renvoyé à l'écran de déverrouillage pour redéfinir un nouveau PIN."),
+          "Tu vas être renvoyé à l'écran de déverrouillage pour redéfinir un nouveau PIN.",
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -244,19 +244,18 @@ class SettingsTab extends ConsumerWidget {
           .read(settingsRepositoryProvider)
           .set(SettingsKeys.logoPath, dst.path);
       if (!context.mounted) return;
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Logo importé.')),
-      );
+      messenger.showSnackBar(const SnackBar(content: Text('Logo importé.')));
     } catch (e) {
       if (!context.mounted) return;
-      messenger.showSnackBar(
-        SnackBar(content: Text("Échec de l'import : $e")),
-      );
+      messenger.showSnackBar(SnackBar(content: Text("Échec de l'import : $e")));
     }
   }
 
   Future<void> _removeLogo(
-      BuildContext context, WidgetRef ref, String currentPath) async {
+    BuildContext context,
+    WidgetRef ref,
+    String currentPath,
+  ) async {
     final messenger = ScaffoldMessenger.of(context);
     try {
       final f = File(currentPath);
@@ -266,9 +265,7 @@ class SettingsTab extends ConsumerWidget {
     }
     await ref.read(settingsRepositoryProvider).delete(SettingsKeys.logoPath);
     if (!context.mounted) return;
-    messenger.showSnackBar(
-      const SnackBar(content: Text('Logo retiré.')),
-    );
+    messenger.showSnackBar(const SnackBar(content: Text('Logo retiré.')));
   }
 
   // ── Rappel sauvegarde ────────────────────────────────────────
@@ -306,10 +303,7 @@ class SettingsTab extends ConsumerWidget {
                     'Le rappel s\'affiche sous forme de bandeau sur l\'admin '
                     'quand la dernière sauvegarde dépasse l\'intervalle. Pas '
                     'de notif système (Klok ne demande aucune permission).',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: KlokTokens.muted,
-                    ),
+                    style: TextStyle(fontSize: 12, color: KlokTokens.muted),
                   ),
                 ],
               ),
@@ -341,7 +335,9 @@ class SettingsTab extends ConsumerWidget {
     // On stamp la date du check manuel — utile si plus tard on branche un
     // canal privé (Firebase App Distribution) on saura quand l'utilisateur a
     // ouvert ce dialog la dernière fois.
-    await ref.read(settingsRepositoryProvider).set(
+    await ref
+        .read(settingsRepositoryProvider)
+        .set(
           SettingsKeys.lastUpdateCheckAt,
           DateTime.now().toUtc().toIso8601String(),
         );
@@ -452,8 +448,7 @@ class _SettingCard extends StatelessWidget {
           const SizedBox(width: 12),
           if (item.badge)
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: KlokTokens.successBg,
                 borderRadius: BorderRadius.circular(999),
@@ -504,8 +499,7 @@ class _OutlineButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: KlokTokens.border),
           ),
-          padding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           child: Text(
             label,
             style: TextStyle(
@@ -523,11 +517,7 @@ class _OutlineButton extends StatelessWidget {
 // Grille responsive — copie de celle du team_tab (volontairement locale
 // pour garder l'onglet autonome).
 class _Grid extends StatelessWidget {
-  const _Grid({
-    required this.cols,
-    required this.gap,
-    required this.children,
-  });
+  const _Grid({required this.cols, required this.gap, required this.children});
 
   final int cols;
   final double gap;
@@ -547,12 +537,14 @@ class _Grid extends StatelessWidget {
         }
         if (j < cols - 1) row.add(SizedBox(width: gap));
       }
-      rows.add(IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: row,
+      rows.add(
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: row,
+          ),
         ),
-      ));
+      );
       if (i + cols < children.length) rows.add(SizedBox(height: gap));
     }
     return Column(

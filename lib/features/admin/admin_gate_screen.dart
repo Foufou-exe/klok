@@ -50,9 +50,7 @@ class AdminGateScreen extends ConsumerWidget {
                   onTap: () => context.go('/'),
                 ),
               ),
-              Center(
-                child: exists ? const _PinEntry() : const _PinCreate(),
-              ),
+              Center(child: exists ? const _PinEntry() : const _PinCreate()),
             ],
           ),
         ),
@@ -158,9 +156,7 @@ class _PinEntryState extends ConsumerState<_PinEntry>
       setState(() => _busy = true);
       // Petit délai : laisser le dernier point s'allumer visuellement.
       await Future<void>.delayed(const Duration(milliseconds: 180));
-      final ok = await ref
-          .read(adminUnlockedProvider.notifier)
-          .unlock(_pin);
+      final ok = await ref.read(adminUnlockedProvider.notifier).unlock(_pin);
       if (!mounted) return;
       if (ok) {
         context.go('/admin/home');
@@ -301,9 +297,7 @@ class _PinCreateState extends ConsumerState<_PinCreate>
       if (_firstPin == _secondPin) {
         await ref.read(settingsRepositoryProvider).setPin(_firstPin);
         ref.invalidate(hasAdminPinProvider);
-        await ref
-            .read(adminUnlockedProvider.notifier)
-            .unlock(_firstPin);
+        await ref.read(adminUnlockedProvider.notifier).unlock(_firstPin);
         if (!mounted) return;
         context.go('/admin/home');
       } else {
@@ -358,10 +352,7 @@ class _PinCreateState extends ConsumerState<_PinCreate>
           _step == 0
               ? "$kAdminPinLength chiffres. Tu les utiliseras pour ouvrir l'admin."
               : 'Retape les $kAdminPinLength mêmes chiffres.',
-          style: TextStyle(
-            fontSize: 13,
-            color: KlokTokens.inkSoft,
-          ),
+          style: TextStyle(fontSize: 13, color: KlokTokens.inkSoft),
         ),
         const SizedBox(height: 28),
         PinDots(
@@ -395,11 +386,7 @@ class _HeaderIcon extends StatelessWidget {
         color: KlokTokens.bg,
         border: Border.all(color: KlokTokens.border),
       ),
-      child: Icon(
-        Icons.lock_outline,
-        size: 24,
-        color: KlokTokens.bordeaux,
-      ),
+      child: Icon(Icons.lock_outline, size: 24, color: KlokTokens.bordeaux),
     );
   }
 }

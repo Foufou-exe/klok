@@ -58,7 +58,8 @@ class PayrollData {
   final List<PayrollDayLine> lines;
   final Duration totalDuration;
 
-  int get daysWorked => lines.where((l) => l.netDuration > Duration.zero).length;
+  int get daysWorked =>
+      lines.where((l) => l.netDuration > Duration.zero).length;
 
   double? grossPay() {
     final cents = employee.hourlyRateCents;
@@ -81,14 +82,16 @@ class PayrollPdfService {
     required DateTime to,
   }) async {
     final start = DateTime(from.year, from.month, from.day).toUtc();
-    final end = DateTime(to.year, to.month, to.day)
-        .add(const Duration(days: 1))
-        .toUtc();
+    final end = DateTime(
+      to.year,
+      to.month,
+      to.day,
+    ).add(const Duration(days: 1)).toUtc();
 
-    final sessions =
-        await _sessions.sessionsInRange(employee.id, start, end);
-    final breaks = await _sessions
-        .breaksForSessions(sessions.map((s) => s.id).toList());
+    final sessions = await _sessions.sessionsInRange(employee.id, start, end);
+    final breaks = await _sessions.breaksForSessions(
+      sessions.map((s) => s.id).toList(),
+    );
 
     // On regroupe par jour LOCAL (clef "yyyy-MM-dd"). Une session qui
     // commence à 23:30 et finit à 02:00 est attribuée au jour de début —
@@ -97,25 +100,34 @@ class PayrollPdfService {
     for (final s in sessions) {
       final local = s.startedAt.toLocal();
       final key = DateFormat('yyyy-MM-dd').format(local);
-      byDay.putIfAbsent(key, () => []).add(SessionWithBreaks(
-            session: s,
-            breaks: breaks.where((b) => b.sessionId == s.id).toList(),
-          ));
+      byDay
+          .putIfAbsent(key, () => [])
+          .add(
+            SessionWithBreaks(
+              session: s,
+              breaks: breaks.where((b) => b.sessionId == s.id).toList(),
+            ),
+          );
     }
 
     final lines = <PayrollDayLine>[];
     Duration total = Duration.zero;
     for (final entry in byDay.entries) {
       final firstStart = entry.value.first.session.startedAt.toLocal();
-      final dayStart =
-          DateTime(firstStart.year, firstStart.month, firstStart.day);
+      final dayStart = DateTime(
+        firstStart.year,
+        firstStart.month,
+        firstStart.day,
+      );
       final net = sumNet(entry.value);
       total += net;
-      lines.add(PayrollDayLine(
-        date: dayStart,
-        netDuration: net,
-        sessionCount: entry.value.length,
-      ));
+      lines.add(
+        PayrollDayLine(
+          date: dayStart,
+          netDuration: net,
+          sessionCount: entry.value.length,
+        ),
+      );
     }
     lines.sort((a, b) => a.date.compareTo(b.date));
 
@@ -168,17 +180,11 @@ class PayrollPdfService {
             children: [
               pw.Text(
                 'Généré par Klok · ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
-                style: pw.TextStyle(
-                  fontSize: 9,
-                  color: PdfColors.grey600,
-                ),
+                style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
               ),
               pw.Text(
                 'Page ${ctx.pageNumber} / ${ctx.pagesCount}',
-                style: pw.TextStyle(
-                  fontSize: 9,
-                  color: PdfColors.grey600,
-                ),
+                style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
               ),
             ],
           ),
@@ -190,8 +196,7 @@ class PayrollPdfService {
             padding: const pw.EdgeInsets.all(12),
             decoration: pw.BoxDecoration(
               color: PdfColors.grey100,
-              borderRadius:
-                  const pw.BorderRadius.all(pw.Radius.circular(6)),
+              borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
             ),
             child: pw.Row(
               children: [
@@ -221,18 +226,22 @@ class PayrollPdfService {
                 pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.end,
                   children: [
-                    pw.Text('Période',
-                        style: pw.TextStyle(
-                          fontSize: 9,
-                          color: PdfColors.grey600,
-                          letterSpacing: 0.6,
-                        )),
+                    pw.Text(
+                      'Période',
+                      style: pw.TextStyle(
+                        fontSize: 9,
+                        color: PdfColors.grey600,
+                        letterSpacing: 0.6,
+                      ),
+                    ),
                     pw.SizedBox(height: 2),
-                    pw.Text(period,
-                        style: pw.TextStyle(
-                          fontSize: 11,
-                          fontWeight: pw.FontWeight.bold,
-                        )),
+                    pw.Text(
+                      period,
+                      style: pw.TextStyle(
+                        fontSize: 11,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -256,10 +265,7 @@ class PayrollPdfService {
           else
             pw.Table(
               border: pw.TableBorder.symmetric(
-                inside: pw.BorderSide(
-                  color: PdfColors.grey300,
-                  width: 0.5,
-                ),
+                inside: pw.BorderSide(color: PdfColors.grey300, width: 0.5),
               ),
               columnWidths: const {
                 0: pw.FlexColumnWidth(3),
@@ -276,11 +282,13 @@ class PayrollPdfService {
                   ],
                 ),
                 for (final line in data.lines)
-                  pw.TableRow(children: [
-                    _td(_capitalize(dateFmt.format(line.date))),
-                    _td('${line.sessionCount}'),
-                    _td(formatDuration(line.netDuration), alignRight: true),
-                  ]),
+                  pw.TableRow(
+                    children: [
+                      _td(_capitalize(dateFmt.format(line.date))),
+                      _td('${line.sessionCount}'),
+                      _td(formatDuration(line.netDuration), alignRight: true),
+                    ],
+                  ),
               ],
             ),
           pw.SizedBox(height: 18),
@@ -289,8 +297,7 @@ class PayrollPdfService {
             padding: const pw.EdgeInsets.all(14),
             decoration: pw.BoxDecoration(
               color: PdfColors.grey900,
-              borderRadius:
-                  const pw.BorderRadius.all(pw.Radius.circular(6)),
+              borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
             ),
             child: pw.Row(
               children: [
@@ -352,10 +359,7 @@ class PayrollPdfService {
               ),
               child: pw.Text(
                 'Document généré par $ownerName · $establishmentName',
-                style: pw.TextStyle(
-                  fontSize: 10,
-                  color: PdfColors.grey700,
-                ),
+                style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
               ),
             ),
         ],
@@ -383,19 +387,20 @@ class PayrollPdfService {
         establishmentName: establishmentName,
         ownerName: ownerName,
       );
-      final safeName =
-          '${data.employee.firstName}_${data.employee.lastName}'
-              .replaceAll(RegExp(r'[^A-Za-z0-9_]'), '_');
+      final safeName = '${data.employee.firstName}_${data.employee.lastName}'
+          .replaceAll(RegExp(r'[^A-Za-z0-9_]'), '_');
       final filename = 'klok_paie_${safeName}_$stamp.pdf';
       final file = File(p.join(dir.path, filename));
       await file.writeAsBytes(bytes);
       files.add(XFile(file.path, mimeType: 'application/pdf'));
     }
-    await SharePlus.instance.share(ShareParams(
-      files: files,
-      subject:
-          'Paie $establishmentName · ${DateFormat('MM/yyyy').format(bundle.first.from)}',
-    ));
+    await SharePlus.instance.share(
+      ShareParams(
+        files: files,
+        subject:
+            'Paie $establishmentName · ${DateFormat('MM/yyyy').format(bundle.first.from)}',
+      ),
+    );
     return files.length;
   }
 }
@@ -428,20 +433,15 @@ pw.Widget _pdfHeader({
               if (ownerName != null && ownerName.isNotEmpty)
                 pw.Text(
                   ownerName,
-                  style: pw.TextStyle(
-                    fontSize: 11,
-                    color: PdfColors.grey700,
-                  ),
+                  style: pw.TextStyle(fontSize: 11, color: PdfColors.grey700),
                 ),
             ],
           ),
           pw.Container(
-            padding: const pw.EdgeInsets.symmetric(
-                horizontal: 10, vertical: 6),
+            padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: pw.BoxDecoration(
               color: PdfColors.grey900,
-              borderRadius:
-                  const pw.BorderRadius.all(pw.Radius.circular(4)),
+              borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
             ),
             child: pw.Text(
               'PAIE',
@@ -456,10 +456,7 @@ pw.Widget _pdfHeader({
         ],
       ),
       pw.SizedBox(height: 4),
-      pw.Container(
-        height: 1,
-        color: PdfColors.grey300,
-      ),
+      pw.Container(height: 1, color: PdfColors.grey300),
     ],
   );
 }

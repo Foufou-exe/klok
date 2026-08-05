@@ -49,8 +49,9 @@ void main() {
     expect(state.isIdle, true);
 
     final sessions = await sessionRepo.sessionsInRange(id, t0, t3);
-    final breaks =
-        await sessionRepo.breaksForSessions(sessions.map((s) => s.id).toList());
+    final breaks = await sessionRepo.breaksForSessions(
+      sessions.map((s) => s.id).toList(),
+    );
     expect(sessions, hasLength(1));
     expect(breaks, hasLength(1));
 
@@ -70,35 +71,44 @@ void main() {
     expect(() => sessionRepo.startSession(id), throwsA(isA<StateError>()));
   });
 
-  test('watchClockState reacts to break start/end without session change',
-      () async {
-    final empRepo = EmployeeRepository(db);
-    final sessionRepo = SessionRepository(db);
-    final id = await empRepo.create(firstName: 'Eve', lastName: 'Test');
+  test(
+    'watchClockState reacts to break start/end without session change',
+    () async {
+      final empRepo = EmployeeRepository(db);
+      final sessionRepo = SessionRepository(db);
+      final id = await empRepo.create(firstName: 'Eve', lastName: 'Test');
 
-    final states = <EmployeeClockState>[];
-    final sub = sessionRepo.watchClockState(id).listen(states.add);
+      final states = <EmployeeClockState>[];
+      final sub = sessionRepo.watchClockState(id).listen(states.add);
 
-    await Future<void>.delayed(const Duration(milliseconds: 50));
-    expect(states.last.isIdle, true);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(states.last.isIdle, true);
 
-    final session = await sessionRepo.startSession(id);
-    await Future<void>.delayed(const Duration(milliseconds: 50));
-    expect(states.last.isWorking, true);
+      final session = await sessionRepo.startSession(id);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(states.last.isWorking, true);
 
-    final brk = await sessionRepo.startBreak(session.id);
-    await Future<void>.delayed(const Duration(milliseconds: 50));
-    expect(states.last.isOnBreak, true, reason: 'break start must refresh UI');
+      final brk = await sessionRepo.startBreak(session.id);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(
+        states.last.isOnBreak,
+        true,
+        reason: 'break start must refresh UI',
+      );
 
-    await sessionRepo.endBreak(brk.id);
-    await Future<void>.delayed(const Duration(milliseconds: 50));
-    expect(states.last.isWorking, true,
-        reason: 'break end must refresh UI back to working');
+      await sessionRepo.endBreak(brk.id);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(
+        states.last.isWorking,
+        true,
+        reason: 'break end must refresh UI back to working',
+      );
 
-    await sessionRepo.endSession(session.id);
-    await Future<void>.delayed(const Duration(milliseconds: 50));
-    expect(states.last.isIdle, true);
+      await sessionRepo.endSession(session.id);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(states.last.isIdle, true);
 
-    await sub.cancel();
-  });
+      await sub.cancel();
+    },
+  );
 }

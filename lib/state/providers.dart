@@ -39,11 +39,11 @@ final allEmployeesProvider = StreamProvider<List<Employee>>((ref) {
   return ref.watch(employeeRepositoryProvider).watchAll();
 });
 
-final clockStateProvider =
-    StreamProvider.family<EmployeeClockState, int>((ref, employeeId) {
-  return ref
-      .watch(sessionRepositoryProvider)
-      .watchClockState(employeeId);
+final clockStateProvider = StreamProvider.family<EmployeeClockState, int>((
+  ref,
+  employeeId,
+) {
+  return ref.watch(sessionRepositoryProvider).watchClockState(employeeId);
 });
 
 final hasAdminPinProvider = FutureProvider<bool>((ref) {
@@ -67,10 +67,10 @@ final ownerNameProvider = StreamProvider<String?>((ref) {
   final repo = ref.watch(settingsRepositoryProvider);
   return repo.watch(SettingsKeys.ownerFirstName).asyncMap((first) async {
     final last = await repo.get(SettingsKeys.ownerLastName);
-    final fullName = [first ?? '', last ?? '']
-        .where((s) => s.isNotEmpty)
-        .join(' ')
-        .trim();
+    final fullName = [
+      first ?? '',
+      last ?? '',
+    ].where((s) => s.isNotEmpty).join(' ').trim();
     if (fullName.isNotEmpty) return fullName;
     // Fallback legacy.
     return repo.get(SettingsKeys.ownerLegacyName);
@@ -91,9 +91,7 @@ final payrollPdfServiceProvider = Provider<PayrollPdfService>((ref) {
 
 /// Date de la dernière sauvegarde (ISO8601), si une a été effectuée.
 final lastBackupAtProvider = StreamProvider<String?>((ref) {
-  return ref
-      .watch(settingsRepositoryProvider)
-      .watch(SettingsKeys.lastBackupAt);
+  return ref.watch(settingsRepositoryProvider).watch(SettingsKeys.lastBackupAt);
 });
 
 /// Chemin absolu du logo importé par le patron — null si non défini.
@@ -137,8 +135,7 @@ final lastUpdateCheckAtProvider = StreamProvider<String?>((ref) {
       .watch(SettingsKeys.lastUpdateCheckAt);
 });
 
-final employeeByIdProvider =
-    FutureProvider.family<Employee, int>((ref, id) {
+final employeeByIdProvider = FutureProvider.family<Employee, int>((ref, id) {
   return ref.watch(employeeRepositoryProvider).getById(id);
 });
 
@@ -209,9 +206,7 @@ final teamStatusProvider = Provider<TeamStatus>((ref) {
       ref.watch(activeEmployeesProvider).asData?.value ?? const [];
 
   // sessionId → pause ouverte (s'il y en a une)
-  final breakBySession = <int, Break>{
-    for (final b in breaks) b.sessionId: b,
-  };
+  final breakBySession = <int, Break>{for (final b in breaks) b.sessionId: b};
   final firstNameById = <int, String>{
     for (final e in employees) e.id: e.firstName,
   };

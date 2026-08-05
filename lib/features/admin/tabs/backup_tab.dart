@@ -95,8 +95,7 @@ class _ExportCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final last = ref.watch(lastBackupAtProvider).asData?.value;
     final now = DateTime.now();
-    final filename =
-        'klok-backup-${DateFormat('yyyy-MM-dd').format(now)}.zip';
+    final filename = 'klok-backup-${DateFormat('yyyy-MM-dd').format(now)}.zip';
 
     String lastLabel;
     if (last == null) {
@@ -137,8 +136,7 @@ class _ExportCard extends ConsumerWidget {
                     const SizedBox(height: 2),
                     Text(
                       'Salariés · sessions · pauses · réglages',
-                      style: TextStyle(
-                          fontSize: 13, color: KlokTokens.inkSoft),
+                      style: TextStyle(fontSize: 13, color: KlokTokens.inkSoft),
                     ),
                   ],
                 ),
@@ -166,10 +164,7 @@ class _ExportCard extends ConsumerWidget {
                 const SizedBox(height: 4),
                 Text(
                   'Contenu généré à l\'instant',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: KlokTokens.inkSoft,
-                  ),
+                  style: TextStyle(fontSize: 12, color: KlokTokens.inkSoft),
                 ),
               ],
             ),
@@ -184,8 +179,7 @@ class _ExportCard extends ConsumerWidget {
             children: [
               Text(
                 'Dernière : ',
-                style:
-                    TextStyle(fontSize: 12, color: KlokTokens.inkSoft),
+                style: TextStyle(fontSize: 12, color: KlokTokens.inkSoft),
               ),
               Expanded(
                 child: Text(
@@ -213,16 +207,16 @@ class _ExportCard extends ConsumerWidget {
       // On stamp la date dès que le fichier est écrit (avant share) — comme
       // ça même si l'utilisateur annule la sheet de partage on a quand même
       // une trace que l'export s'est fait localement.
-      await ref.read(settingsRepositoryProvider).set(
+      await ref
+          .read(settingsRepositoryProvider)
+          .set(
             SettingsKeys.lastBackupAt,
             DateTime.now().toUtc().toIso8601String(),
           );
       await backup.share(result);
     } catch (e) {
       if (!context.mounted) return;
-      messenger.showSnackBar(
-        SnackBar(content: Text("Échec de l'export : $e")),
-      );
+      messenger.showSnackBar(SnackBar(content: Text("Échec de l'export : $e")));
     }
   }
 }
@@ -264,8 +258,7 @@ class _RestoreCard extends ConsumerWidget {
                     const SizedBox(height: 2),
                     Text(
                       'Remplace les données actuelles',
-                      style: TextStyle(
-                          fontSize: 13, color: KlokTokens.inkSoft),
+                      style: TextStyle(fontSize: 13, color: KlokTokens.inkSoft),
                     ),
                   ],
                 ),
@@ -273,9 +266,7 @@ class _RestoreCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 14),
-          _DashedDropzone(
-            onBrowse: () => _pickAndRestore(context, ref),
-          ),
+          _DashedDropzone(onBrowse: () => _pickAndRestore(context, ref)),
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(12),
@@ -301,7 +292,8 @@ class _RestoreCard extends ConsumerWidget {
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
                   const TextSpan(
-                      text: '. Un aperçu s\'affichera avant confirmation.'),
+                    text: '. Un aperçu s\'affichera avant confirmation.',
+                  ),
                 ],
               ),
             ),
@@ -349,9 +341,7 @@ Future<void> _pickAndRestore(BuildContext context, WidgetRef ref) async {
     preview = backup.inspect(bytes);
   } catch (e) {
     if (!context.mounted) return;
-    messenger.showSnackBar(
-      SnackBar(content: Text('Sauvegarde invalide : $e')),
-    );
+    messenger.showSnackBar(SnackBar(content: Text('Sauvegarde invalide : $e')));
     return;
   }
 
@@ -385,9 +375,13 @@ Future<void> _pickAndRestore(BuildContext context, WidgetRef ref) async {
 }
 
 Future<bool?> _showRestorePreview(
-    BuildContext context, RestorePreview p) async {
-  final stamp = DateFormat('dd/MM/yyyy à HH:mm', 'fr_FR')
-      .format(p.exportedAt.toLocal());
+  BuildContext context,
+  RestorePreview p,
+) async {
+  final stamp = DateFormat(
+    'dd/MM/yyyy à HH:mm',
+    'fr_FR',
+  ).format(p.exportedAt.toLocal());
   return showDialog<bool>(
     context: context,
     builder: (_) => AlertDialog(
@@ -400,11 +394,13 @@ Future<bool?> _showRestorePreview(
           const SizedBox(height: 6),
           Text('Version klok : ${p.appVersion}'),
           const SizedBox(height: 12),
-          Text('Contenu du fichier :',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: KlokTokens.ink,
-              )),
+          Text(
+            'Contenu du fichier :',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: KlokTokens.ink,
+            ),
+          ),
           const SizedBox(height: 4),
           Text('• ${p.employeeCount} salariés'),
           Text('• ${p.sessionCount} sessions de travail'),
@@ -458,8 +454,7 @@ class _DashedDropzone extends StatelessWidget {
           children: [
             Text.rich(
               TextSpan(
-                style:
-                    TextStyle(fontSize: 13, color: KlokTokens.inkSoft),
+                style: TextStyle(fontSize: 13, color: KlokTokens.inkSoft),
                 children: [
                   const TextSpan(text: 'Dépose un fichier '),
                   TextSpan(
@@ -486,7 +481,9 @@ class _DashedDropzone extends StatelessWidget {
                     border: Border.all(color: KlokTokens.border),
                   ),
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 6),
+                    horizontal: 14,
+                    vertical: 6,
+                  ),
                   child: Text(
                     'Parcourir',
                     style: TextStyle(
@@ -528,8 +525,7 @@ class _DashedBorderPainter extends CustomPainter {
     for (final metric in path.computeMetrics()) {
       var dist = 0.0;
       while (dist < metric.length) {
-        final len =
-            (dist + dash < metric.length) ? dash : metric.length - dist;
+        final len = (dist + dash < metric.length) ? dash : metric.length - dist;
         canvas.drawPath(metric.extractPath(dist, dist + len), paint);
         dist += dash + gap;
       }
@@ -545,11 +541,7 @@ class _DashedBorderPainter extends CustomPainter {
 // Widgets partagés
 // ─────────────────────────────────────────────────────────────
 class _IconBadge extends StatelessWidget {
-  const _IconBadge({
-    required this.icon,
-    required this.bg,
-    required this.fg,
-  });
+  const _IconBadge({required this.icon, required this.bg, required this.fg});
 
   final IconData icon;
   final Color bg;

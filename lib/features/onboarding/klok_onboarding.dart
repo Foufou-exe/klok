@@ -49,7 +49,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   // Vide tant que la double saisie n'a pas été validée.
   String _pinValue = '';
 
-  static const _steps = ['Bienvenue', 'Établissement', 'Patron', 'Code PIN', 'Prêt'];
+  static const _steps = [
+    'Bienvenue',
+    'Établissement',
+    'Patron',
+    'Code PIN',
+    'Prêt',
+  ];
 
   @override
   void dispose() {
@@ -92,14 +98,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     if (loc.isNotEmpty) {
       await settings.set(SettingsKeys.barLocation, loc);
     }
-    await settings.set(
-      SettingsKeys.ownerFirstName,
-      _firstNameCtrl.text.trim(),
-    );
-    await settings.set(
-      SettingsKeys.ownerLastName,
-      _lastNameCtrl.text.trim(),
-    );
+    await settings.set(SettingsKeys.ownerFirstName, _firstNameCtrl.text.trim());
+    await settings.set(SettingsKeys.ownerLastName, _lastNameCtrl.text.trim());
     await settings.setPin(_pinValue);
     ref.invalidate(hasAdminPinProvider);
     if (!mounted) return;
@@ -124,7 +124,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 48, vertical: 24),
+                      horizontal: 48,
+                      vertical: 24,
+                    ),
                     child: _StepContent(
                       step: _step,
                       establishmentCtrl: _establishmentCtrl,
@@ -173,7 +175,9 @@ class _ProgressHeader extends StatelessWidget {
       ),
       child: Padding(
         padding: EdgeInsets.symmetric(
-            horizontal: narrow ? 20 : 48, vertical: 20),
+          horizontal: narrow ? 20 : 48,
+          vertical: 20,
+        ),
         child: Row(
           children: [
             Container(
@@ -387,10 +391,7 @@ class _WelcomeStep extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 36),
-        _BordeauxButton(
-          label: "C'est parti →",
-          onTap: onStart,
-        ),
+        _BordeauxButton(label: "C'est parti →", onTap: onStart),
       ],
     );
   }
@@ -733,11 +734,13 @@ class _DoneStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fullName = [ownerFirstName, ownerLastName]
-        .where((s) => s.isNotEmpty)
-        .join(' ');
-    final establishmentLine =
-        location.isEmpty ? establishment : '$establishment · $location';
+    final fullName = [
+      ownerFirstName,
+      ownerLastName,
+    ].where((s) => s.isNotEmpty).join(' ');
+    final establishmentLine = location.isEmpty
+        ? establishment
+        : '$establishment · $location';
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -751,11 +754,7 @@ class _DoneStep extends StatelessWidget {
           child: const Center(
             child: Text(
               '✓',
-              style: TextStyle(
-                fontSize: 44,
-                color: Colors.white,
-                height: 1.0,
-              ),
+              style: TextStyle(fontSize: 44, color: Colors.white, height: 1.0),
             ),
           ),
         ),
@@ -789,8 +788,10 @@ class _DoneStep extends StatelessWidget {
                 ),
               ),
               const TextSpan(
-                  text: ' est configuré.\nTu peux maintenant ajouter tes '
-                      "salariés depuis l'écran admin."),
+                text:
+                    ' est configuré.\nTu peux maintenant ajouter tes '
+                    "salariés depuis l'écran admin.",
+              ),
             ],
           ),
         ),
@@ -827,10 +828,7 @@ class _DoneStep extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 28),
-        _BordeauxButton(
-          label: 'Lancer Klok →',
-          onTap: onFinish,
-        ),
+        _BordeauxButton(label: 'Lancer Klok →', onTap: onFinish),
       ],
     );
   }
@@ -919,10 +917,7 @@ class _StepHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        Text(
-          help,
-          style: TextStyle(fontSize: 14, color: KlokTokens.inkSoft),
-        ),
+        Text(help, style: TextStyle(fontSize: 14, color: KlokTokens.inkSoft)),
       ],
     );
   }
@@ -963,10 +958,7 @@ class _LabeledInput extends StatelessWidget {
                 padding: const EdgeInsets.only(left: 6),
                 child: Text(
                   '· optionnel',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: KlokTokens.muted,
-                  ),
+                  style: TextStyle(fontSize: 11, color: KlokTokens.muted),
                 ),
               ),
           ],
@@ -987,8 +979,10 @@ class _LabeledInput extends StatelessWidget {
             hintStyle: TextStyle(color: KlokTokens.muted),
             filled: true,
             fillColor: KlokTokens.card,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 18,
+              vertical: 16,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: KlokTokens.border, width: 1.5),
@@ -1034,11 +1028,7 @@ class _NavBar extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             _GhostButton(label: '← Retour', onTap: onBack),
-            _DarkButton(
-              label: 'Continuer →',
-              enabled: canNext,
-              onTap: onNext,
-            ),
+            _DarkButton(label: 'Continuer →', enabled: canNext, onTap: onNext),
           ],
         ),
       ),

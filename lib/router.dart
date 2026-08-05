@@ -58,10 +58,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/',
-        builder: (ctx, st) => const EmployeeSelectScreen(),
-      ),
+      GoRoute(path: '/', builder: (ctx, st) => const EmployeeSelectScreen()),
       GoRoute(
         path: '/onboarding',
         builder: (ctx, st) => const OnboardingScreen(),
@@ -81,18 +78,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           return ConfirmScreen(employeeId: id, action: action);
         },
       ),
-      GoRoute(
-        path: '/admin',
-        builder: (ctx, st) => const AdminGateScreen(),
-      ),
+      GoRoute(path: '/admin', builder: (ctx, st) => const AdminGateScreen()),
       GoRoute(
         path: '/admin/home',
         builder: (ctx, st) => const AdminHomeScreen(),
       ),
     ],
-    errorBuilder: (ctx, st) => Scaffold(
-      body: Center(child: Text('Route inconnue : ${st.uri}')),
-    ),
+    errorBuilder: (ctx, st) =>
+        Scaffold(body: Center(child: Text('Route inconnue : ${st.uri}'))),
   );
 
   // Re-évalue le redirect dès que :

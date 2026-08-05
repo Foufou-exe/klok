@@ -35,24 +35,26 @@ void main() {
       }
     });
 
-    test('deux installations avec le même PIN ont des empreintes différentes',
-        () async {
-      await settings.setPin('4271');
-      final saltA = await settings.get(SettingsKeys.pinSalt);
-      final hashA = await settings.get(SettingsKeys.pinHash);
+    test(
+      'deux installations avec le même PIN ont des empreintes différentes',
+      () async {
+        await settings.setPin('4271');
+        final saltA = await settings.get(SettingsKeys.pinSalt);
+        final hashA = await settings.get(SettingsKeys.pinHash);
 
-      final otherDb = AppDatabase.forTesting(NativeDatabase.memory());
-      addTearDown(otherDb.close);
-      final other = SettingsRepository(otherDb);
-      await other.setPin('4271');
-      final saltB = await other.get(SettingsKeys.pinSalt);
-      final hashB = await other.get(SettingsKeys.pinHash);
+        final otherDb = AppDatabase.forTesting(NativeDatabase.memory());
+        addTearDown(otherDb.close);
+        final other = SettingsRepository(otherDb);
+        await other.setPin('4271');
+        final saltB = await other.get(SettingsKeys.pinSalt);
+        final hashB = await other.get(SettingsKeys.pinHash);
 
-      // Sel aléatoire : une table précalculée pour une tablette est inutile
-      // sur une autre.
-      expect(saltA, isNot(saltB));
-      expect(hashA, isNot(hashB));
-    });
+        // Sel aléatoire : une table précalculée pour une tablette est inutile
+        // sur une autre.
+        expect(saltA, isNot(saltB));
+        expect(hashA, isNot(hashB));
+      },
+    );
 
     test('changer de PIN invalide l\'ancien', () async {
       await settings.setPin('1111');
@@ -101,8 +103,11 @@ void main() {
         expect(await settings.verifyPin('0000'), isFalse);
       }
       expect(await settings.remainingLockout(), Duration.zero);
-      expect(await settings.verifyPin('4271'), isTrue,
-          reason: 'le patron qui se trompe deux fois ne doit pas être puni');
+      expect(
+        await settings.verifyPin('4271'),
+        isTrue,
+        reason: 'le patron qui se trompe deux fois ne doit pas être puni',
+      );
     });
 
     test('au-delà du quota, une temporisation démarre', () async {
@@ -118,8 +123,11 @@ void main() {
       for (var i = 0; i < kPinFreeAttempts + 1; i++) {
         await settings.verifyPin('0000');
       }
-      expect(await settings.verifyPin('4271'), isFalse,
-          reason: 'sinon la temporisation ne ralentit rien');
+      expect(
+        await settings.verifyPin('4271'),
+        isFalse,
+        reason: 'sinon la temporisation ne ralentit rien',
+      );
     });
 
     test('un échec pendant la temporisation ne l\'allonge pas', () async {
@@ -131,43 +139,48 @@ void main() {
 
       await settings.verifyPin('0000');
 
-      expect(await settings.get(SettingsKeys.pinFailCount), count,
-          reason: 'un essai rejeté d\'office ne doit pas compter double');
+      expect(
+        await settings.get(SettingsKeys.pinFailCount),
+        count,
+        reason: 'un essai rejeté d\'office ne doit pas compter double',
+      );
     });
 
-    test('la temporisation double à chaque salve, mais reste plafonnée',
-        () async {
-      await settings.setPin('4271');
+    test(
+      'la temporisation double à chaque salve, mais reste plafonnée',
+      () async {
+        await settings.setPin('4271');
 
-      /// Fait « passer le temps » sans attendre : on recule la date du dernier
-      /// échec pour purger la temporisation en cours.
-      Future<void> letLockoutExpire() => settings.set(
-            SettingsKeys.pinLastFailAt,
-            DateTime.now()
-                .toUtc()
-                .subtract(kPinMaxLockout * 2)
-                .toIso8601String(),
-          );
+        /// Fait « passer le temps » sans attendre : on recule la date du dernier
+        /// échec pour purger la temporisation en cours.
+        Future<void> letLockoutExpire() => settings.set(
+          SettingsKeys.pinLastFailAt,
+          DateTime.now().toUtc().subtract(kPinMaxLockout * 2).toIso8601String(),
+        );
 
-      for (var i = 0; i < kPinFreeAttempts + 1; i++) {
-        await settings.verifyPin('0000');
-      }
-      final first = await settings.remainingLockout();
-      expect(first, greaterThan(Duration.zero));
+        for (var i = 0; i < kPinFreeAttempts + 1; i++) {
+          await settings.verifyPin('0000');
+        }
+        final first = await settings.remainingLockout();
+        expect(first, greaterThan(Duration.zero));
 
-      await letLockoutExpire();
-      await settings.verifyPin('0000');
-      final second = await settings.remainingLockout();
-
-      expect(second, greaterThan(first), reason: 'le délai doit doubler');
-
-      // Beaucoup d'échecs plus tard : le délai est borné.
-      for (var i = 0; i < 20; i++) {
         await letLockoutExpire();
         await settings.verifyPin('0000');
-      }
-      expect(await settings.remainingLockout(), lessThanOrEqualTo(kPinMaxLockout));
-    });
+        final second = await settings.remainingLockout();
+
+        expect(second, greaterThan(first), reason: 'le délai doit doubler');
+
+        // Beaucoup d'échecs plus tard : le délai est borné.
+        for (var i = 0; i < 20; i++) {
+          await letLockoutExpire();
+          await settings.verifyPin('0000');
+        }
+        expect(
+          await settings.remainingLockout(),
+          lessThanOrEqualTo(kPinMaxLockout),
+        );
+      },
+    );
 
     test('un déverrouillage réussi remet le compteur à zéro', () async {
       await settings.setPin('4271');
@@ -191,7 +204,10 @@ void main() {
         SettingsKeys.pinLastFailAt,
         DateTime.now().toUtc().add(const Duration(days: 1)).toIso8601String(),
       );
-      expect(await settings.remainingLockout(), lessThanOrEqualTo(kPinMaxLockout));
+      expect(
+        await settings.remainingLockout(),
+        lessThanOrEqualTo(kPinMaxLockout),
+      );
     });
   });
 }

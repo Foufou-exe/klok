@@ -88,11 +88,7 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
             error: (e, _) => Center(child: Text('Erreur : $e')),
             data: (employee) => action == null
                 ? const _FallbackUnknownAction()
-                : _ConfirmBody(
-                    employee: employee,
-                    action: action,
-                    at: _at,
-                  ),
+                : _ConfirmBody(employee: employee, action: action, at: _at),
           ),
         ),
       ),

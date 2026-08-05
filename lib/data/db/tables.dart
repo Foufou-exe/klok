@@ -4,8 +4,9 @@ class Employees extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get firstName => text().withLength(min: 1, max: 80)();
   TextColumn get lastName => text().withLength(min: 1, max: 80)();
-  TextColumn get color =>
-      text().withLength(min: 7, max: 7).withDefault(const Constant('#3B82F6'))();
+  TextColumn get color => text()
+      .withLength(min: 7, max: 7)
+      .withDefault(const Constant('#3B82F6'))();
   IntColumn get hourlyRateCents => integer().nullable()();
   BoolColumn get archived => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();

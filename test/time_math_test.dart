@@ -30,7 +30,9 @@ void main() {
       final s = build(
         startedAt: DateTime.utc(2026, 5, 12, 9),
         endedAt: DateTime.utc(2026, 5, 12, 17),
-        breaks: [(DateTime.utc(2026, 5, 12, 12), DateTime.utc(2026, 5, 12, 13))],
+        breaks: [
+          (DateTime.utc(2026, 5, 12, 12), DateTime.utc(2026, 5, 12, 13)),
+        ],
       );
       expect(s.grossDuration, const Duration(hours: 8));
       expect(s.breakDuration, const Duration(hours: 1));
@@ -114,7 +116,9 @@ void main() {
       final s = build(
         startedAt: DateTime.utc(2026, 5, 12, 18),
         endedAt: DateTime.utc(2026, 5, 13, 2),
-        breaks: [(DateTime.utc(2026, 5, 12, 22), DateTime.utc(2026, 5, 12, 22, 30))],
+        breaks: [
+          (DateTime.utc(2026, 5, 12, 22), DateTime.utc(2026, 5, 12, 22, 30)),
+        ],
       );
       expect(s.hasTimeAnomaly, isFalse);
       expect(s.anomalyLabel, isNull);

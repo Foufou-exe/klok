@@ -49,10 +49,7 @@ class ClockScreen extends ConsumerWidget {
               child: CircularProgressIndicator(color: KlokTokens.bordeaux),
             ),
             error: (e, _) => Center(child: Text('Erreur : $e')),
-            data: (state) => _ClockBody(
-              employee: employee,
-              state: state,
-            ),
+            data: (state) => _ClockBody(employee: employee, state: state),
           ),
         ),
       ),
@@ -77,7 +74,11 @@ class _ClockBody extends ConsumerWidget {
         // Breakpoint choisi en pratique : en dessous de 700, les deux cartes
         // sont trop serrées côte à côte (48px padding + 24px gap).
         final stacked = w < 700;
-        final horiz = w >= 900 ? 48.0 : w >= 600 ? 32.0 : 20.0;
+        final horiz = w >= 900
+            ? 48.0
+            : w >= 600
+            ? 32.0
+            : 20.0;
 
         return Column(
           children: [
@@ -107,9 +108,13 @@ class _SplitLayout extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(child: _IdentityCard(employee: employee, state: state)),
+        Expanded(
+          child: _IdentityCard(employee: employee, state: state),
+        ),
         const SizedBox(width: 24),
-        Expanded(child: _ActionColumn(employee: employee, state: state)),
+        Expanded(
+          child: _ActionColumn(employee: employee, state: state),
+        ),
       ],
     );
   }
@@ -161,8 +166,7 @@ class _TopBar extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.chevron_left,
-                      size: 18, color: KlokTokens.inkSoft),
+                  Icon(Icons.chevron_left, size: 18, color: KlokTokens.inkSoft),
                   const SizedBox(width: 4),
                   Text(
                     'Changer de salarié',
@@ -308,10 +312,7 @@ class _IdentityCard extends ConsumerWidget {
                   // Compteurs (seulement si une session est en cours).
                   if (!state.isIdle) ...[
                     const SizedBox(height: 18),
-                    _DayWeekCounters(
-                      employee: employee,
-                      repo: repo,
-                    ),
+                    _DayWeekCounters(employee: employee, repo: repo),
                   ],
                 ],
               ),
@@ -400,19 +401,27 @@ class _DayWeekCountersState extends State<_DayWeekCounters> {
     final now = DateTime.now();
     final startOfDay = DateTime(now.year, now.month, now.day).toUtc();
     // Lundi = 1 en Dart.
-    final weekStartLocal =
-        DateTime(now.year, now.month, now.day)
-            .subtract(Duration(days: now.weekday - 1));
+    final weekStartLocal = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(Duration(days: now.weekday - 1));
     final weekStart = weekStartLocal.toUtc();
-    final endOfRange = DateTime(now.year, now.month, now.day)
-        .add(const Duration(days: 1))
-        .toUtc();
+    final endOfRange = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).add(const Duration(days: 1)).toUtc();
 
     // Jour
-    final sessionsToday =
-        await widget.repo.sessionsInRange(widget.employee.id, startOfDay, endOfRange);
-    final breaksToday = await widget.repo
-        .breaksForSessions(sessionsToday.map((s) => s.id).toList());
+    final sessionsToday = await widget.repo.sessionsInRange(
+      widget.employee.id,
+      startOfDay,
+      endOfRange,
+    );
+    final breaksToday = await widget.repo.breaksForSessions(
+      sessionsToday.map((s) => s.id).toList(),
+    );
     final todayTotal = sumNet([
       for (final s in sessionsToday)
         SessionWithBreaks(
@@ -422,10 +431,14 @@ class _DayWeekCountersState extends State<_DayWeekCounters> {
     ]);
 
     // Semaine
-    final sessionsWeek =
-        await widget.repo.sessionsInRange(widget.employee.id, weekStart, endOfRange);
-    final breaksWeek = await widget.repo
-        .breaksForSessions(sessionsWeek.map((s) => s.id).toList());
+    final sessionsWeek = await widget.repo.sessionsInRange(
+      widget.employee.id,
+      weekStart,
+      endOfRange,
+    );
+    final breaksWeek = await widget.repo.breaksForSessions(
+      sessionsWeek.map((s) => s.id).toList(),
+    );
     final weekTotal = sumNet([
       for (final s in sessionsWeek)
         SessionWithBreaks(
@@ -519,9 +532,9 @@ class _ActionColumn extends ConsumerWidget {
         context.go('/confirm/${employee.id}/$action');
       } catch (e) {
         if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur : $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
       }
     }
 
@@ -529,21 +542,23 @@ class _ActionColumn extends ConsumerWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (state.isIdle) _HeroAction(
-              label: 'Démarrer',
-              label2: 'le service',
-              sub: 'Ça sera noté à ${formatHHmm(DateTime.now())}',
-              bg: KlokTokens.success,
-              onTap: () => doAction('start'),
-              overline: 'ACTION',
-            )
-        else if (state.isOnBreak) _HeroAction(
-              label: 'Reprendre',
-              label2: 'le service',
-              sub: _breakDurationSub(state.openBreak),
-              bg: KlokTokens.amber,
-              onTap: () => doAction('break-end'),
-            )
+        if (state.isIdle)
+          _HeroAction(
+            label: 'Démarrer',
+            label2: 'le service',
+            sub: 'Ça sera noté à ${formatHHmm(DateTime.now())}',
+            bg: KlokTokens.success,
+            onTap: () => doAction('start'),
+            overline: 'ACTION',
+          )
+        else if (state.isOnBreak)
+          _HeroAction(
+            label: 'Reprendre',
+            label2: 'le service',
+            sub: _breakDurationSub(state.openBreak),
+            bg: KlokTokens.amber,
+            onTap: () => doAction('break-end'),
+          )
         else ...[
           // En service — deux actions, la principale d'abord.
           _PrimaryAction(
@@ -563,7 +578,9 @@ class _ActionColumn extends ConsumerWidget {
   }
 
   Future<void> _confirmEndSession(
-      BuildContext context, VoidCallback onConfirm) async {
+    BuildContext context,
+    VoidCallback onConfirm,
+  ) async {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -787,10 +804,7 @@ class _SecondaryAction extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   sub,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: KlokTokens.inkSoft,
-                  ),
+                  style: TextStyle(fontSize: 13, color: KlokTokens.inkSoft),
                 ),
               ],
             ),

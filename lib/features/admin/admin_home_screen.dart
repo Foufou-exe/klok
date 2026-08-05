@@ -64,8 +64,7 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
     // les ConsumerWidgets enfants (qui watchent des StreamProviders) peuvent
     // émettre une valeur cachée synchroniquement pendant la pose et déclencher
     // un `!_debugDoingThisLayout` en re-entrance.
-    final horiz =
-        MediaQuery.sizeOf(context).width >= 900 ? 28.0 : 20.0;
+    final horiz = MediaQuery.sizeOf(context).width >= 900 ? 28.0 : 20.0;
     return Scaffold(
       backgroundColor: KlokTokens.bg,
       body: SafeArea(
@@ -79,9 +78,7 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
             // Bandeau de rappel de sauvegarde, promis au patron dans les
             // Réglages. Placé dans la coquille et non dans un onglet : il doit
             // se voir quel que soit l'endroit où le patron se trouve.
-            _BackupReminderBanner(
-              onOpenBackup: () => _select(AdminTab.backup),
-            ),
+            _BackupReminderBanner(onOpenBackup: () => _select(AdminTab.backup)),
             Expanded(
               child: Padding(
                 padding: EdgeInsets.fromLTRB(horiz, 28, horiz, 28),
@@ -142,7 +139,7 @@ class _BackupReminderBanner extends ConsumerWidget {
             child: Text(
               never
                   ? "Aucune sauvegarde n'a encore été faite. Les données ne "
-                      'vivent que sur cette tablette.'
+                        'vivent que sur cette tablette.'
                   : 'Ta dernière sauvegarde date : pense à en refaire une.',
               style: TextStyle(
                 fontSize: 13,
@@ -152,10 +149,7 @@ class _BackupReminderBanner extends ConsumerWidget {
             ),
           ),
           const SizedBox(width: 12),
-          TextButton(
-            onPressed: onOpenBackup,
-            child: const Text('Sauvegarder'),
-          ),
+          TextButton(onPressed: onOpenBackup, child: const Text('Sauvegarder')),
         ],
       ),
     );
@@ -187,13 +181,13 @@ class _AdminHeader extends ConsumerWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: KlokTokens.card,
-        border: Border(
-          bottom: BorderSide(color: KlokTokens.border),
-        ),
+        border: Border(bottom: BorderSide(color: KlokTokens.border)),
       ),
       child: Padding(
         padding: EdgeInsets.symmetric(
-            horizontal: narrow ? 20 : 36, vertical: narrow ? 14 : 20),
+          horizontal: narrow ? 20 : 36,
+          vertical: narrow ? 14 : 20,
+        ),
         child: narrow
             ? Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -213,10 +207,7 @@ class _AdminHeader extends ConsumerWidget {
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     physics: const BouncingScrollPhysics(),
-                    child: _TabPillGroup(
-                      active: activeTab,
-                      onSelect: onSelect,
-                    ),
+                    child: _TabPillGroup(active: activeTab, onSelect: onSelect),
                   ),
                 ],
               )
@@ -354,8 +345,7 @@ class _TabPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(9),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
             color: active ? KlokTokens.card : Colors.transparent,
             borderRadius: BorderRadius.circular(9),

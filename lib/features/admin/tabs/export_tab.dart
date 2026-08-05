@@ -53,10 +53,7 @@ class _ExportTabState extends ConsumerState<ExportTab> {
         );
       case _Period.custom:
         // Placeholder : 30 derniers jours (picker réel plus tard).
-        return (
-          now.subtract(const Duration(days: 29)),
-          now,
-        );
+        return (now.subtract(const Duration(days: 29)), now);
     }
   }
 
@@ -79,9 +76,10 @@ class _ExportTabState extends ConsumerState<ExportTab> {
           (await settings.get(SettingsKeys.ownerFirstName))?.trim() ?? '';
       final ownerLast =
           (await settings.get(SettingsKeys.ownerLastName))?.trim() ?? '';
-      var ownerName = [ownerFirst, ownerLast]
-          .where((s) => s.isNotEmpty)
-          .join(' ');
+      var ownerName = [
+        ownerFirst,
+        ownerLast,
+      ].where((s) => s.isNotEmpty).join(' ');
       if (ownerName.isEmpty) {
         ownerName =
             (await settings.get(SettingsKeys.ownerLegacyName))?.trim() ?? '';
@@ -100,7 +98,9 @@ class _ExportTabState extends ConsumerState<ExportTab> {
       if (!mounted) return;
       messenger.showSnackBar(
         SnackBar(
-          content: Text('$n PDF généré${n > 1 ? 's' : ''} et partagé${n > 1 ? 's' : ''}.'),
+          content: Text(
+            '$n PDF généré${n > 1 ? 's' : ''} et partagé${n > 1 ? 's' : ''}.',
+          ),
         ),
       );
     } catch (e) {
@@ -174,11 +174,7 @@ class _ExportTabState extends ConsumerState<ExportTab> {
               }
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  left,
-                  const SizedBox(height: 16),
-                  right,
-                ],
+                children: [left, const SizedBox(height: 16), right],
               );
             },
           ),
@@ -495,8 +491,9 @@ class _GenerateButton extends StatelessWidget {
                         height: 16,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -610,9 +607,7 @@ class _PdfPreview extends StatelessWidget {
         // Header PDF
         DecoratedBox(
           decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(color: KlokTokens.border),
-            ),
+            border: Border(bottom: BorderSide(color: KlokTokens.border)),
           ),
           child: Padding(
             padding: const EdgeInsets.only(bottom: 12),
@@ -680,7 +675,9 @@ class _PdfPreview extends StatelessWidget {
               ['Heures', '—'],
               ['Pauses', '—'],
             ]) ...[
-              Expanded(child: _PdfKpi(label: kv[0], value: kv[1])),
+              Expanded(
+                child: _PdfKpi(label: kv[0], value: kv[1]),
+              ),
               if (kv != const ['Pauses', '—']) const SizedBox(width: 6),
             ],
           ],

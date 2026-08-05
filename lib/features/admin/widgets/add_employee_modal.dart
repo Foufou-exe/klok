@@ -162,8 +162,10 @@ class _AddEmployeeModalState extends ConsumerState<AddEmployeeModal> {
                           isEdit
                               ? "Mets à jour les infos de l'équipe"
                               : 'Choisis un prénom, un nom et une couleur',
-                          style:
-                              TextStyle(fontSize: 13, color: KlokTokens.inkSoft),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: KlokTokens.inkSoft,
+                          ),
                         ),
                       ],
                     ),
@@ -262,7 +264,8 @@ class _AddEmployeeModalState extends ConsumerState<AddEmployeeModal> {
                 label: 'Taux horaire (€/h) — optionnel',
                 controller: _rateCtrl,
                 keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true),
+                  decimal: true,
+                ),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                 ],
@@ -284,11 +287,12 @@ class _AddEmployeeModalState extends ConsumerState<AddEmployeeModal> {
                 spacing: 10,
                 runSpacing: 10,
                 children: [
-                  for (final c in _palette) _ColorDot(
-                    color: c,
-                    selected: c == _color,
-                    onTap: () => setState(() => _color = c),
-                  ),
+                  for (final c in _palette)
+                    _ColorDot(
+                      color: c,
+                      selected: c == _color,
+                      onTap: () => setState(() => _color = c),
+                    ),
                 ],
               ),
 
@@ -369,8 +373,10 @@ class _Field extends StatelessWidget {
           style: TextStyle(fontSize: 14, color: KlokTokens.ink),
           decoration: InputDecoration(
             isDense: true,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
             fillColor: KlokTokens.card,
             filled: true,
             border: OutlineInputBorder(

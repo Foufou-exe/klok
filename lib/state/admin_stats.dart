@@ -36,8 +36,9 @@ Future<EmployeeRangeTotals> _computeTotals(
   DateTime to,
 ) async {
   final sessions = await repo.sessionsInRange(employee.id, from, to);
-  final breaks =
-      await repo.breaksForSessions(sessions.map((s) => s.id).toList());
+  final breaks = await repo.breaksForSessions(
+    sessions.map((s) => s.id).toList(),
+  );
   final joined = [
     for (final s in sessions)
       SessionWithBreaks(
@@ -59,58 +60,65 @@ Future<EmployeeRangeTotals> _computeTotals(
 /// Totaux "aujourd'hui" pour un salarié donné, en local timezone.
 final todayTotalsProvider = FutureProvider.autoDispose
     .family<EmployeeRangeTotals, int>((ref, employeeId) async {
-  // Dépend du tick pour se rafraîchir toutes les secondes tant qu'une
-  // session ouverte existe — évite un compteur figé à "3h 12m".
-  ref.watch(tickerProvider);
-  final employee = await ref.watch(employeeByIdProvider(employeeId).future);
-  final repo = ref.watch(sessionRepositoryProvider);
+      // Dépend du tick pour se rafraîchir toutes les secondes tant qu'une
+      // session ouverte existe — évite un compteur figé à "3h 12m".
+      ref.watch(tickerProvider);
+      final employee = await ref.watch(employeeByIdProvider(employeeId).future);
+      final repo = ref.watch(sessionRepositoryProvider);
 
-  final now = DateTime.now();
-  final dayStart = DateTime(now.year, now.month, now.day).toUtc();
-  final dayEnd = DateTime(now.year, now.month, now.day)
-      .add(const Duration(days: 1))
-      .toUtc();
-  return _computeTotals(repo, employee, dayStart, dayEnd);
-});
+      final now = DateTime.now();
+      final dayStart = DateTime(now.year, now.month, now.day).toUtc();
+      final dayEnd = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).add(const Duration(days: 1)).toUtc();
+      return _computeTotals(repo, employee, dayStart, dayEnd);
+    });
 
 /// Totaux de la semaine courante (lundi 00:00 local → maintenant).
 final weekTotalsProvider = FutureProvider.autoDispose
     .family<EmployeeRangeTotals, int>((ref, employeeId) async {
-  ref.watch(tickerProvider);
-  final employee = await ref.watch(employeeByIdProvider(employeeId).future);
-  final repo = ref.watch(sessionRepositoryProvider);
+      ref.watch(tickerProvider);
+      final employee = await ref.watch(employeeByIdProvider(employeeId).future);
+      final repo = ref.watch(sessionRepositoryProvider);
 
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-  final weekStart = today.subtract(Duration(days: now.weekday - 1)).toUtc();
-  final weekEnd = today.add(const Duration(days: 1)).toUtc();
-  return _computeTotals(repo, employee, weekStart, weekEnd);
-});
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final weekStart = today.subtract(Duration(days: now.weekday - 1)).toUtc();
+      final weekEnd = today.add(const Duration(days: 1)).toUtc();
+      return _computeTotals(repo, employee, weekStart, weekEnd);
+    });
 
 /// Totaux du mois courant.
 final monthTotalsProvider = FutureProvider.autoDispose
     .family<EmployeeRangeTotals, int>((ref, employeeId) async {
-  ref.watch(tickerProvider);
-  final employee = await ref.watch(employeeByIdProvider(employeeId).future);
-  final repo = ref.watch(sessionRepositoryProvider);
+      ref.watch(tickerProvider);
+      final employee = await ref.watch(employeeByIdProvider(employeeId).future);
+      final repo = ref.watch(sessionRepositoryProvider);
 
-  final now = DateTime.now();
-  final start = DateTime(now.year, now.month).toUtc();
-  final end = DateTime(now.year, now.month + 1).toUtc();
-  return _computeTotals(repo, employee, start, end);
-});
+      final now = DateTime.now();
+      final start = DateTime(now.year, now.month).toUtc();
+      final end = DateTime(now.year, now.month + 1).toUtc();
+      return _computeTotals(repo, employee, start, end);
+    });
 
 /// Totaux jour par jour sur la semaine en cours (pour le graphe Dashboard).
 /// Index 0 = lundi, 6 = dimanche.
 class WeekDayHours {
-  WeekDayHours({required this.label, required this.hours, required this.isToday});
+  WeekDayHours({
+    required this.label,
+    required this.hours,
+    required this.isToday,
+  });
   final String label;
   final double hours;
   final bool isToday;
 }
 
-final currentWeekDaysProvider =
-    FutureProvider.autoDispose<List<WeekDayHours>>((ref) async {
+final currentWeekDaysProvider = FutureProvider.autoDispose<List<WeekDayHours>>((
+  ref,
+) async {
   ref.watch(tickerProvider);
   final employees = await ref.watch(activeEmployeesProvider.future);
   final repo = ref.watch(sessionRepositoryProvider);
@@ -127,8 +135,9 @@ final currentWeekDaysProvider =
     Duration total = Duration.zero;
     for (final e in employees) {
       final sessions = await repo.sessionsInRange(e.id, dayStart, dayEnd);
-      final breaks = await repo
-          .breaksForSessions(sessions.map((s) => s.id).toList());
+      final breaks = await repo.breaksForSessions(
+        sessions.map((s) => s.id).toList(),
+      );
       final joined = [
         for (final s in sessions)
           SessionWithBreaks(
@@ -138,18 +147,21 @@ final currentWeekDaysProvider =
       ];
       total += sumNet(joined);
     }
-    result.add(WeekDayHours(
-      label: labels[i],
-      hours: total.inMinutes / 60.0,
-      isToday: i == (now.weekday - 1),
-    ));
+    result.add(
+      WeekDayHours(
+        label: labels[i],
+        hours: total.inMinutes / 60.0,
+        isToday: i == (now.weekday - 1),
+      ),
+    );
   }
   return result;
 });
 
 /// Somme des heures de tous les salariés actifs sur la semaine en cours.
-final currentWeekTotalProvider =
-    FutureProvider.autoDispose<Duration>((ref) async {
+final currentWeekTotalProvider = FutureProvider.autoDispose<Duration>((
+  ref,
+) async {
   final days = await ref.watch(currentWeekDaysProvider.future);
   var total = 0.0;
   for (final d in days) {
@@ -168,32 +180,33 @@ class MonthTotalsSummary {
 
 final currentMonthTotalsProvider =
     FutureProvider.autoDispose<MonthTotalsSummary>((ref) async {
-  ref.watch(tickerProvider);
-  final employees = await ref.watch(activeEmployeesProvider.future);
-  final repo = ref.watch(sessionRepositoryProvider);
+      ref.watch(tickerProvider);
+      final employees = await ref.watch(activeEmployeesProvider.future);
+      final repo = ref.watch(sessionRepositoryProvider);
 
-  final now = DateTime.now();
-  final start = DateTime(now.year, now.month).toUtc();
-  final end = DateTime(now.year, now.month + 1).toUtc();
+      final now = DateTime.now();
+      final start = DateTime(now.year, now.month).toUtc();
+      final end = DateTime(now.year, now.month + 1).toUtc();
 
-  Duration total = Duration.zero;
-  final daySet = <String>{};
-  for (final e in employees) {
-    final sessions = await repo.sessionsInRange(e.id, start, end);
-    final breaks =
-        await repo.breaksForSessions(sessions.map((s) => s.id).toList());
-    for (final s in sessions) {
-      final d = s.startedAt.toLocal();
-      daySet.add('${d.year}-${d.month}-${d.day}');
-    }
-    final joined = [
-      for (final s in sessions)
-        SessionWithBreaks(
-          session: s,
-          breaks: breaks.where((b) => b.sessionId == s.id).toList(),
-        ),
-    ];
-    total += sumNet(joined);
-  }
-  return MonthTotalsSummary(total: total, daysWithActivity: daySet.length);
-});
+      Duration total = Duration.zero;
+      final daySet = <String>{};
+      for (final e in employees) {
+        final sessions = await repo.sessionsInRange(e.id, start, end);
+        final breaks = await repo.breaksForSessions(
+          sessions.map((s) => s.id).toList(),
+        );
+        for (final s in sessions) {
+          final d = s.startedAt.toLocal();
+          daySet.add('${d.year}-${d.month}-${d.day}');
+        }
+        final joined = [
+          for (final s in sessions)
+            SessionWithBreaks(
+              session: s,
+              breaks: breaks.where((b) => b.sessionId == s.id).toList(),
+            ),
+        ];
+        total += sumNet(joined);
+      }
+      return MonthTotalsSummary(total: total, daysWithActivity: daySet.length);
+    });

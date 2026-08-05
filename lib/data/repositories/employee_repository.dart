@@ -15,17 +15,17 @@ class EmployeeRepository {
   }
 
   Stream<List<Employee>> watchAll() {
-    return (_db.select(_db.employees)
-          ..orderBy([
-            (e) => OrderingTerm(expression: e.archived),
-            (e) => OrderingTerm(expression: e.firstName),
-          ]))
+    return (_db.select(_db.employees)..orderBy([
+          (e) => OrderingTerm(expression: e.archived),
+          (e) => OrderingTerm(expression: e.firstName),
+        ]))
         .watch();
   }
 
   Future<Employee> getById(int id) {
-    return (_db.select(_db.employees)..where((e) => e.id.equals(id)))
-        .getSingle();
+    return (_db.select(
+      _db.employees,
+    )..where((e) => e.id.equals(id))).getSingle();
   }
 
   Future<int> create({
@@ -34,7 +34,9 @@ class EmployeeRepository {
     String color = '#3B82F6',
     int? hourlyRateCents,
   }) {
-    return _db.into(_db.employees).insert(
+    return _db
+        .into(_db.employees)
+        .insert(
           EmployeesCompanion.insert(
             firstName: firstName,
             lastName: lastName,
@@ -49,12 +51,14 @@ class EmployeeRepository {
   }
 
   Future<void> archive(int id) async {
-    await (_db.update(_db.employees)..where((e) => e.id.equals(id)))
-        .write(const EmployeesCompanion(archived: Value(true)));
+    await (_db.update(_db.employees)..where((e) => e.id.equals(id))).write(
+      const EmployeesCompanion(archived: Value(true)),
+    );
   }
 
   Future<void> unarchive(int id) async {
-    await (_db.update(_db.employees)..where((e) => e.id.equals(id)))
-        .write(const EmployeesCompanion(archived: Value(false)));
+    await (_db.update(_db.employees)..where((e) => e.id.equals(id))).write(
+      const EmployeesCompanion(archived: Value(false)),
+    );
   }
 }

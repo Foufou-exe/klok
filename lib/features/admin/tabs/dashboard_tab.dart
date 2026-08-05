@@ -59,10 +59,7 @@ class DashboardTab extends ConsumerWidget {
                         child: _ActiveNowCard(onOpen: onOpenEmployee),
                       ),
                       const SizedBox(width: 16),
-                      Expanded(
-                        flex: 5,
-                        child: const _WeekCard(),
-                      ),
+                      Expanded(flex: 5, child: const _WeekCard()),
                     ],
                   ),
                 )
@@ -164,10 +161,7 @@ class _ActiveNowCard extends ConsumerWidget {
               child: Text(
                 'Personne en service pour le moment.',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: KlokTokens.inkSoft,
-                ),
+                style: TextStyle(fontSize: 14, color: KlokTokens.inkSoft),
               ),
             )
           else
@@ -212,7 +206,11 @@ class _ActiveRow extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Row(
             children: [
-              _CircleInitials(color: color, initials: _initialsOf(employee), size: 44),
+              _CircleInitials(
+                color: color,
+                initials: _initialsOf(employee),
+                size: 44,
+              ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
@@ -277,11 +275,7 @@ class _StatusChip extends StatelessWidget {
       ),
       child: Text(
         working ? 'Service' : 'Pause',
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-          color: fg,
-        ),
+        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: fg),
       ),
     );
   }
@@ -355,7 +349,9 @@ class _WeekBars extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final maxH = days.fold<double>(
-        0, (acc, d) => d.hours > acc ? d.hours : acc);
+      0,
+      (acc, d) => d.hours > acc ? d.hours : acc,
+    );
     return Column(
       children: [
         Expanded(
@@ -426,8 +422,9 @@ class _StatRow extends ConsumerWidget {
     final lastBackup = ref.watch(lastBackupAtProvider);
 
     final monthValue = monthTotals.asData?.value;
-    final monthLabel =
-        monthValue != null ? formatDuration(monthValue.total) : '—';
+    final monthLabel = monthValue != null
+        ? formatDuration(monthValue.total)
+        : '—';
     final monthSub = monthValue != null
         ? '${monthValue.daysWithActivity} jour${monthValue.daysWithActivity > 1 ? 's' : ''}'
         : '—';
@@ -464,11 +461,7 @@ class _StatRow extends ConsumerWidget {
         value: averagePerPersonLabel,
         sub: 'par personne / semaine',
       ),
-      _Stat(
-        label: 'Dernière sauvegarde',
-        value: backupLabel,
-        sub: backupSub,
-      ),
+      _Stat(label: 'Dernière sauvegarde', value: backupLabel, sub: backupSub),
     ];
 
     if (wide) {
@@ -564,10 +557,7 @@ class _CircleInitials extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color,
-      ),
+      decoration: BoxDecoration(shape: BoxShape.circle, color: color),
       child: Center(
         child: Text(
           initials,

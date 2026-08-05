@@ -104,7 +104,8 @@ Color _oklch(double l, double c, double hDeg) {
   // LMS → linear sRGB
   final r = 4.0767416621 * lCube - 3.3077115913 * mCube + 0.2309699292 * sCube;
   final g = -1.2684380046 * lCube + 2.6097574011 * mCube - 0.3413193965 * sCube;
-  final bl = -0.0041960863 * lCube - 0.7034186147 * mCube + 1.7076147010 * sCube;
+  final bl =
+      -0.0041960863 * lCube - 0.7034186147 * mCube + 1.7076147010 * sCube;
 
   return Color.fromRGBO(
     (_gammaEncode(r) * 255).round().clamp(0, 255),

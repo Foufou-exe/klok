@@ -8,8 +8,16 @@ library;
 
 enum BackupReminderFreq {
   none(key: 'none', label: 'Aucun rappel', interval: null),
-  weekly(key: 'weekly', label: 'Hebdomadaire · lundi', interval: Duration(days: 7)),
-  monthly(key: 'monthly', label: 'Mensuel · 1er du mois', interval: Duration(days: 30));
+  weekly(
+    key: 'weekly',
+    label: 'Hebdomadaire · lundi',
+    interval: Duration(days: 7),
+  ),
+  monthly(
+    key: 'monthly',
+    label: 'Mensuel · 1er du mois',
+    interval: Duration(days: 30),
+  );
 
   const BackupReminderFreq({
     required this.key,
@@ -50,7 +58,8 @@ enum BackupReminderStatus {
   never;
 
   bool get needsAttention =>
-      this == BackupReminderStatus.overdue || this == BackupReminderStatus.never;
+      this == BackupReminderStatus.overdue ||
+      this == BackupReminderStatus.never;
 }
 
 /// Détermine si une sauvegarde est due.
@@ -65,7 +74,9 @@ BackupReminderStatus backupReminderStatus({
   final interval = freq.interval;
   if (interval == null) return BackupReminderStatus.disabled;
 
-  final last = lastBackupAtIso == null ? null : DateTime.tryParse(lastBackupAtIso);
+  final last = lastBackupAtIso == null
+      ? null
+      : DateTime.tryParse(lastBackupAtIso);
   if (last == null) return BackupReminderStatus.never;
 
   final reference = (now ?? DateTime.now()).toUtc();

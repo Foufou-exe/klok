@@ -55,8 +55,9 @@ class BackupService {
       'employees': employees.map(_employeeToJson).toList(),
       'sessions': sessions.map(_sessionToJson).toList(),
       'breaks': breaks.map(_breakToJson).toList(),
-      'settings':
-          settings.map((s) => {'key': s.key, 'value': s.value}).toList(),
+      'settings': settings
+          .map((s) => {'key': s.key, 'value': s.value})
+          .toList(),
     };
 
     final dataJson = jsonEncode(data);
@@ -87,26 +88,27 @@ class BackupService {
   Future<void> share(BackupResult r) async {
     // share_plus 12.x : `Share.shareXFiles` est deprecated au profit de
     // `SharePlus.instance.share(ShareParams(...))`.
-    await SharePlus.instance.share(ShareParams(
-      files: [XFile(r.filePath, mimeType: 'application/json')],
-      subject: 'Sauvegarde klok',
-    ));
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(r.filePath, mimeType: 'application/json')],
+        subject: 'Sauvegarde klok',
+      ),
+    );
   }
 
   RestorePreview inspect(Uint8List bytes) {
-    final payload =
-        jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+    final payload = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
     final checksumField = payload['checksum'] as String?;
     final data = payload['data'] as Map<String, dynamic>?;
     if (data == null || checksumField == null) {
       throw const FormatException('Fichier de sauvegarde invalide.');
     }
     final expected = checksumField.split(':').last;
-    final got =
-        sha256.convert(utf8.encode(jsonEncode(data))).toString();
+    final got = sha256.convert(utf8.encode(jsonEncode(data))).toString();
     if (expected != got) {
       throw const FormatException(
-          'Le fichier est corrompu (checksum invalide).');
+        'Le fichier est corrompu (checksum invalide).',
+      );
     }
     if (payload['app'] != 'klok') {
       throw const FormatException('Ce fichier n\'est pas une sauvegarde klok.');
@@ -123,16 +125,14 @@ class BackupService {
   }
 
   Future<void> restore(Uint8List bytes) async {
-    final payload =
-        jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+    final payload = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
     final checksumField = payload['checksum'] as String?;
     final data = payload['data'] as Map<String, dynamic>?;
     if (data == null || checksumField == null) {
       throw const FormatException('Sauvegarde invalide.');
     }
     final expected = checksumField.split(':').last;
-    final got =
-        sha256.convert(utf8.encode(jsonEncode(data))).toString();
+    final got = sha256.convert(utf8.encode(jsonEncode(data))).toString();
     if (expected != got) {
       throw const FormatException('Sauvegarde corrompue.');
     }
@@ -152,45 +152,65 @@ class BackupService {
 
       for (final e in data['employees'] as List) {
         final m = e as Map<String, dynamic>;
-        await _db.into(_db.employees).insert(EmployeesCompanion(
-              id: Value(m['id'] as int),
-              firstName: Value(m['firstName'] as String),
-              lastName: Value(m['lastName'] as String),
-              color: Value(m['color'] as String),
-              hourlyRateCents: Value(m['hourlyRateCents'] as int?),
-              archived: Value(m['archived'] as bool),
-              createdAt: Value(DateTime.parse(m['createdAt'] as String)),
-            ));
+        await _db
+            .into(_db.employees)
+            .insert(
+              EmployeesCompanion(
+                id: Value(m['id'] as int),
+                firstName: Value(m['firstName'] as String),
+                lastName: Value(m['lastName'] as String),
+                color: Value(m['color'] as String),
+                hourlyRateCents: Value(m['hourlyRateCents'] as int?),
+                archived: Value(m['archived'] as bool),
+                createdAt: Value(DateTime.parse(m['createdAt'] as String)),
+              ),
+            );
       }
       for (final s in data['sessions'] as List) {
         final m = s as Map<String, dynamic>;
-        await _db.into(_db.workSessions).insert(WorkSessionsCompanion(
-              id: Value(m['id'] as int),
-              employeeId: Value(m['employeeId'] as int),
-              startedAt: Value(DateTime.parse(m['startedAt'] as String)),
-              endedAt: Value(m['endedAt'] != null
-                  ? DateTime.parse(m['endedAt'] as String)
-                  : null),
-              note: Value(m['note'] as String?),
-            ));
+        await _db
+            .into(_db.workSessions)
+            .insert(
+              WorkSessionsCompanion(
+                id: Value(m['id'] as int),
+                employeeId: Value(m['employeeId'] as int),
+                startedAt: Value(DateTime.parse(m['startedAt'] as String)),
+                endedAt: Value(
+                  m['endedAt'] != null
+                      ? DateTime.parse(m['endedAt'] as String)
+                      : null,
+                ),
+                note: Value(m['note'] as String?),
+              ),
+            );
       }
       for (final b in data['breaks'] as List) {
         final m = b as Map<String, dynamic>;
-        await _db.into(_db.breaks).insert(BreaksCompanion(
-              id: Value(m['id'] as int),
-              sessionId: Value(m['sessionId'] as int),
-              startedAt: Value(DateTime.parse(m['startedAt'] as String)),
-              endedAt: Value(m['endedAt'] != null
-                  ? DateTime.parse(m['endedAt'] as String)
-                  : null),
-            ));
+        await _db
+            .into(_db.breaks)
+            .insert(
+              BreaksCompanion(
+                id: Value(m['id'] as int),
+                sessionId: Value(m['sessionId'] as int),
+                startedAt: Value(DateTime.parse(m['startedAt'] as String)),
+                endedAt: Value(
+                  m['endedAt'] != null
+                      ? DateTime.parse(m['endedAt'] as String)
+                      : null,
+                ),
+              ),
+            );
       }
       for (final kv in data['settings'] as List) {
         final m = kv as Map<String, dynamic>;
-        await _db.into(_db.appSettings).insert(AppSettingsCompanion.insert(
-              key: m['key'] as String,
-              value: m['value'] as String,
-            ));
+        await _db
+            .into(_db.appSettings)
+            .insert(
+              AppSettingsCompanion.insert(
+                key: m['key'] as String,
+                value: m['value'] as String,
+              ),
+            );
       }
     });
   }
